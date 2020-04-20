@@ -1,0 +1,42 @@
+{
+    "name": "angellco/ab-test",
+    "description": "Run up A/B (split) or multivariate tests easily in Craft.",
+    "type": "craft-plugin",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "a/b test",
+        "split test",
+        "multivariate test"
+    ],
+    "support": {
+        "docs": "https://github.com/angell-co/ab-test/blob/master/README.md",
+        "issues": "https://github.com/angell-co/ab-test/issues"
+    },
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Angell & Co",
+            "homepage": "https://angell.io"
+        }
+    ],
+    "require": {
+        "craftcms/cms": "^3.4.0"
+    },
+    "autoload": {
+        "psr-4": {
+          "angellco\\abtest\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "A/B Test ",
+        "handle": "ab-test",
+        "developer": "Angell &amp; Co",
+        "developerUrl": "https://angell.io",
+        "documentationUrl": "https://github.com/angell-co/ab-test/blob/master/README.md",
+        "changelogUrl": "https://raw.githubusercontent.com/angell-co/ab-test/master/CHANGELOG.md",
+        "class": "angellco\\abtest\\AbTest"
+    }
+}
