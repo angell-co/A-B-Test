@@ -1,6 +1,6 @@
 {
     "name": "angellco/ab-test",
-    "description": "Run up A/B (split) or multivariate tests easily in Craft.",
+    "description": "Run A/B (split) or multivariate tests easily in Craft.",
     "type": "craft-plugin",
     "keywords": [
         "craft",
