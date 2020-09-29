@@ -6,13 +6,24 @@
     <div class="field" style="padding-top: 20px;padding-bottom: 20px;">
         <h2>A/B Test</h2>
         <div class="instructions">
-            <p>Toggle on the drafts you want to include in the test.</p>
+            <p>Choose an experiment and then switch on the drafts you want it to include.</p>
         </div>
+
+        {{ forms.selectField({
+            options: [
+                {
+                    label: 'Exp One'
+                },
+                {
+                    label: 'Exp Two'
+                }
+            ]
+        }) }}
     </div>
     {% for draft in drafts %}
         {{ forms.lightswitchField({
             label: draft.draftName,
-            on: true,
+            on: false,
         }) }}
     {% endfor %}
 </div>
