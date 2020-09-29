@@ -1,0 +1,19 @@
+{% import "_includes/forms" as forms %}
+
+
+<div class="meta">
+
+    <div class="field" style="padding-top: 20px;padding-bottom: 20px;">
+        <h2>A/B Test</h2>
+        <div class="instructions">
+            <p>Toggle on the drafts you want to include in the test.</p>
+        </div>
+    </div>
+    {% for draft in drafts %}
+        {{ forms.lightswitchField({
+            label: draft.draftName,
+            on: true,
+        }) }}
+    {% endfor %}
+</div>
+
