@@ -15,6 +15,10 @@
  */
 return [
     'A/B Test' => 'A/B Test',
+    'Experiments' => 'Experiments',
     'No experiments exist yet.' => 'No experiments exist yet.',
     'New experiment' => 'New experiment',
+    'Create a new experiment' => 'Create a new experiment',
+    'Start Date' => 'Start Date',
+    'End Date' => 'End Date',
 ];

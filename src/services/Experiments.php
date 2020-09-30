@@ -133,6 +133,8 @@ class Experiments extends Component
                 $experiments[] = new Experiment($record->toArray([
                     'id',
                     'name',
+                    'startDate',
+                    'endDate',
                 ]));
             }
 

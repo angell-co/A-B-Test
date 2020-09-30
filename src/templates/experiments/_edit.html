@@ -1,1 +1,43 @@
-EDIT
+{% extends "_layouts/cp" %}
+
+{% import "_includes/forms" as forms %}
+
+{% set fullPageForm = true %}
+{% set saveShortcutRedirect = continueEditingUrl %}
+
+{% block content %}
+
+    {{ actionInput('ab-test/experiments/save') }}
+    {{ redirectInput('ab-test/experiments') }}
+
+    {% if experiment.id %}<input type="hidden" name="experimentId" value="{{ experiment.id }}">{% endif %}
+
+    {{ forms.textField({
+        first: true,
+        label: "Name"|t('app'),
+        instructions: "What this experiment will be called in the CP."|t('vend'),
+        id: 'name',
+        name: 'name',
+        value: experiment.name,
+        errors: experiment.getErrors('name'),
+        autofocus: true,
+        required: true,
+    }) }}
+
+    {{ forms.dateTimeField({
+        label: "Start Date"|t('ab-test'),
+        id: 'startDate',
+        name: 'startDate',
+        value: (experiment.startDate ? experiment.startDate : null),
+        errors: experiment.getErrors('startDate'),
+    }) }}
+
+    {{ forms.dateTimeField({
+        label: "End Date"|t('ab-test'),
+        id: 'endDate',
+        name: 'endDate',
+        value: (experiment.endDate ? experiment.endDate : null),
+        errors: experiment.getErrors('endDate'),
+    }) }}
+
+{% endblock %}

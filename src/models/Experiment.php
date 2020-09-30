@@ -33,6 +33,16 @@ class Experiment extends Model
     public $name;
 
     /**
+     * @var \DateTime Start date
+     */
+    public $startDate;
+
+    /**
+     * @var \DateTime End date
+     */
+    public $endDate;
+
+    /**
      * @var int|null Field layout ID
      */
     public $uid;
