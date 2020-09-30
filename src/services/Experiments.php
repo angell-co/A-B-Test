@@ -71,6 +71,37 @@ class Experiments extends Component
         return $this->_experiments()->firstWhere('id', $experimentId);
     }
 
+    public function saveExperiment(Experiment $model, bool $runValidation = true): bool
+    {
+        if ($model->id) {
+            $record = ExperimentRecord::findOne($model->id);
+
+            if (!$record) {
+                throw new Exception(Craft::t('ab-test', 'No experiment exists with the ID “{id}”', ['id' => $model->id]));
+            }
+        } else {
+            $record = new ExperimentRecord();
+        }
+
+        if ($runValidation && !$model->validate()) {
+            Craft::info('Experiment not saved due to validation error.', __METHOD__);
+
+            return false;
+        }
+
+        $record->name = $model->name;
+        $record->startDate = $model->startDate;
+        $record->endDate = $model->endDate;
+
+        // Save it!
+        $record->save(false);
+
+        // Now that we have a record ID, save it on the model
+        $model->id = $record->id;
+
+        return true;
+    }
+
     /**
      * Deletes an experiment by its ID.
      *

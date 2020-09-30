@@ -21,4 +21,7 @@ return [
     'Create a new experiment' => 'Create a new experiment',
     'Start Date' => 'Start Date',
     'End Date' => 'End Date',
+    'No experiment exists with the ID “{id}”' => 'No experiment exists with the ID “{id}”',
+    'Experiment saved.' => 'Experiment saved.',
+    'Couldn’t save experiment.' => 'Couldn’t save experiment.'
 ];

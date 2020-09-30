@@ -13,6 +13,7 @@ namespace angellco\abtest\controllers;
 use angellco\abtest\AbTest;
 use angellco\abtest\models\Experiment;
 use Craft;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
 use yii\web\ForbiddenHttpException;
@@ -98,6 +99,43 @@ class ExperimentsController extends Controller
         $variables['continueEditingUrl'] = "ab-test/experiments/{$experiment->id}";
 
         return $this->renderTemplate('ab-test/experiments/_edit', $variables);
+    }
+
+    /**
+     * Save experiment.
+     *
+     * @throws \craft\errors\MissingComponentException
+     * @throws \yii\web\BadRequestHttpException
+     */
+    public function actionSave()
+    {
+        $this->requirePostRequest();
+
+        $experiment = new Experiment();
+
+        // Shared attributes
+        $experiment->id = Craft::$app->getRequest()->getBodyParam('experimentId');
+        $experiment->name = Craft::$app->getRequest()->getBodyParam('name');
+
+        if ($startDate = Craft::$app->getRequest()->getBodyParam('startDate')) {
+            $experiment->startDate = DateTimeHelper::toDateTime($startDate) ?: null;
+        }
+        if ($endDate = Craft::$app->getRequest()->getBodyParam('endDate')) {
+            $experiment->endDate = DateTimeHelper::toDateTime($endDate) ?: null;
+        }
+
+        // Save it
+        if (AbTest::$plugin->getExperiments()->saveExperiment($experiment)) {
+            Craft::$app->getSession()->setNotice(Craft::t('ab-test', 'Experiment saved.'));
+            $this->redirectToPostedUrl($experiment);
+        } else {
+            Craft::$app->getSession()->setError(Craft::t('ab-test', 'Couldn’t save experiment.'));
+        }
+
+        // Send the model back to the template
+        Craft::$app->getUrlManager()->setRouteParams([
+            'experiment' => $experiment
+        ]);
     }
 
     /**

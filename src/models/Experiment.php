@@ -60,6 +60,18 @@ class Experiment extends Model
     /**
      * @inheritdoc
      */
+    public function datetimeAttributes(): array
+    {
+        $attributes = parent::datetimeAttributes();
+        $attributes[] = 'startDate';
+        $attributes[] = 'endDate';
+
+        return $attributes;
+    }
+
+    /**
+     * @inheritdoc
+     */
 //    protected function defineRules(): array
 //    {
 //        $rules = parent::defineRules();
