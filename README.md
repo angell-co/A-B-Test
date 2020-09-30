@@ -1,6 +1,6 @@
 # A/B Test  plugin for Craft CMS 3.x
 
-Run A/B (split) or multivariate tests easily in Craft.
+Run A/B tests easily in Craft.
 
 ## Requirements
 

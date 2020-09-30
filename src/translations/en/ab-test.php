@@ -1,8 +1,8 @@
 <?php
 /**
- * A/B Test  plugin for Craft CMS 3.x
+ * A/B Test plugin for Craft CMS 3.x
  *
- * Run up A/B (split) or multivariate tests easily in Craft.
+ * Run up A/B tests easily in Craft.
  *
  * @link      https://angell.io
  * @copyright Copyright (c) 2020 Angell & Co
