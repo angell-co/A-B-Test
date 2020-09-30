@@ -100,6 +100,47 @@ class AbTest extends Plugin
             }
         );
 
+        // Entries sidebar
+        if ($request->getIsCpRequest() && !$request->getIsConsoleRequest()) {
+            Craft::$app->getView()->hook('cp.entries.edit.details', function (&$context) {
+                $html = '';
+
+                /** @var  $entry Entry */
+                $entry = $context['entry'];
+                if ($entry !== null) {
+
+                    $experiments = $this->getExperiments()->getAllExperiments();
+                    if ($experiments) {
+
+                        $experimentOptions = [];
+                        foreach ($experiments as $experiment) {
+                            $experimentOptions[] = [
+                                'label' => $experiment->name,
+                                'value' => $experiment->id
+                            ];
+                        }
+
+                        $drafts = Entry::find()
+                            ->draftOf($entry)
+                            ->siteId($entry->siteId)
+                            ->anyStatus()
+                            ->orderBy(['dateUpdated' => SORT_DESC])
+                            ->limit(null)
+                            ->all();
+
+                        if ($drafts) {
+                            $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
+                                'experimentOptions' => $experimentOptions,
+                                'drafts' => $drafts
+                            ]);
+                        }
+                    }
+                }
+
+                return $html;
+            });
+        }
+
         // TODO: POC
         Event::on(Application::class, Application::EVENT_INIT,
             function() use($request, $response) {
@@ -159,36 +200,6 @@ class AbTest extends Plugin
                 }
             }
         );
-
-        // Entries sidebar
-        if ($request->getIsCpRequest() && !$request->getIsConsoleRequest()) {
-            Craft::$app->getView()->hook('cp.entries.edit.details', function (&$context) {
-                $html = '';
-
-                /** @var  $entry Entry */
-                $entry = $context['entry'];
-                if ($entry !== null) {
-
-                    $drafts = Entry::find()
-                        ->draftOf($entry)
-                        ->siteId($entry->siteId)
-                        ->anyStatus()
-                        ->orderBy(['dateUpdated' => SORT_DESC])
-                        ->limit(null)
-                        ->all();
-
-                    $n = count($drafts);
-
-                    if ($drafts) {
-                        $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
-                            'drafts' => $drafts
-                        ]);
-                    }
-                }
-
-                return $html;
-            });
-        }
 
     }
 
