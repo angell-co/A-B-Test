@@ -10,6 +10,7 @@
 
 namespace angellco\abtest\services;
 
+use angellco\abtest\db\Table;
 use angellco\abtest\models\Experiment;
 use angellco\abtest\records\Experiment as ExperimentRecord;
 use Craft;
@@ -57,6 +58,59 @@ class Experiments extends Component
     public function getAllExperiments(): array
     {
         return $this->_experiments()->all();
+    }
+
+    /**
+     * Returns an experiment by its ID.
+     *
+     * @param int $experimentId
+     * @return Experiment|null
+     */
+    public function getExperimentById(int $experimentId)
+    {
+        return $this->_experiments()->firstWhere('id', $experimentId);
+    }
+
+    /**
+     * Deletes an experiment by its ID.
+     *
+     * @param int $experimentId
+     * @return bool
+     * @throws \Throwable
+     */
+    public function deleteExperimentById(int $experimentId): bool
+    {
+
+        if (!$experimentId) {
+            return false;
+        }
+
+        $experiment = $this->getExperimentById($experimentId);
+
+        if (!$experiment) {
+            return false;
+        }
+
+        $transaction = Craft::$app->getDb()->beginTransaction();
+        try {
+
+            // TODO: delete the relations
+
+            // Delete the experiment
+            Craft::$app->getDb()->createCommand()
+                ->delete(Table::EXPERIMENTS, ['id' => $experiment->id])
+                ->execute();
+
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+
+        // Clear caches
+        $this->_experiments = null;
+
+        return true;
     }
 
     // Private Methods

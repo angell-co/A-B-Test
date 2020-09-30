@@ -55,4 +55,22 @@ class ExperimentsController extends Controller
         $variables = [];
         return $this->renderTemplate('ab-test/experiments/_edit', $variables);
     }
+
+    /**
+     * Deletes an experiment.
+     *
+     * @return Response
+     */
+    public function actionDelete(): Response
+    {
+        $this->requirePostRequest();
+        $this->requireAcceptsJson();
+
+        $experimentId = $this->request->getRequiredBodyParam('id');
+
+        AbTest::$plugin->getExperiments()->deleteExperimentById($experimentId);
+
+        return $this->asJson(['success' => true]);
+    }
+
 }
