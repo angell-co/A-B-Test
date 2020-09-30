@@ -14,5 +14,7 @@
  * @since     1.0.0
  */
 return [
-    'A/B Test  plugin loaded' => 'A/B Test  plugin loaded',
+    'A/B Test' => 'A/B Test',
+    'No experiments exist yet.' => 'No experiments exist yet.',
+    'New experiment' => 'New experiment',
 ];

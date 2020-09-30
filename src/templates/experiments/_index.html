@@ -1,0 +1,50 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Experiments'|t('ab-test') %}
+
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
+
+{% do view.registerTranslations('app', [
+    'Name',
+    'Handle',
+]) %}
+
+{% do view.registerTranslations('ab-test', [
+    'No experiments exist yet.',
+]) %}
+
+{% block actionButton %}
+    <a href="{{ url('ab-test/experiments/new') }}" class="btn submit add icon">{{ 'New experiment'|t('ab-test') }}</a>
+{% endblock %}
+
+{% set crumbs = [
+    { label: 'A/B Test'|t('ab-test'), url: url('ab-test') }
+] %}
+
+{% block content %}
+    <div id="abtest-experiments-vue-admin-table"></div>
+{% endblock %}
+
+{% set tableData = [] %}
+{% for experiment in experiments %}
+    {% set tableData = tableData|merge([{
+        id: experiment.id,
+        title: experiment.name|t('site'),
+        url: url('ab-test/experiments/' ~ experiment.id),
+        name: experiment.name|t('site')|e,
+    }]) %}
+{% endfor %}
+
+{% js %}
+    var columns = [
+        { name: '__slot:title', title: Craft.t('app', 'Name') },
+    ];
+
+    new Craft.VueAdminTable({
+    columns: columns,
+    container: '#abtest-experiments-vue-admin-table',
+    deleteAction: 'ab-test/experiments/delete',
+    emptyMessage: Craft.t('ab-test', 'No experiments exist yet.'),
+    tableData: {{ tableData|json_encode|raw }}
+    });
+{% endjs %}

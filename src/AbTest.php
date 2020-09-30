@@ -10,17 +10,20 @@
 
 namespace angellco\abtest;
 
+use angellco\abtest\base\PluginTrait;
+use angellco\abtest\services\Experiments;
 use Craft;
 use craft\base\Plugin;
-
 use craft\db\Query;
 use craft\db\Table;
 use craft\elements\db\ElementQuery;
 use craft\elements\Entry;
 use craft\events\PopulateElementEvent;
+use craft\events\RegisterUrlRulesEvent;
 use craft\events\TemplateEvent;
 use craft\helpers\ConfigHelper;
 use craft\web\Application;
+use craft\web\UrlManager;
 use craft\web\View;
 use yii\base\Event;
 use yii\db\Exception as DbException;
@@ -29,13 +32,20 @@ use yii\web\Cookie;
 /**
  * Class AbTest
  *
+ * @property Experiments $experiments The Experiments component.
+ * @method Experiments getExperiments() Returns the Experiments component.
+ *
  * @author    Angell & Co
  * @package   AbTest
  * @since     1.0.0
- *
  */
 class AbTest extends Plugin
 {
+    // Traits
+    // =========================================================================
+
+    use PluginTrait;
+
     // Static Properties
     // =========================================================================
 
@@ -61,7 +71,7 @@ class AbTest extends Plugin
     /**
      * @var bool
      */
-    public $hasCpSection = false;
+    public $hasCpSection = true;
 
     // Public Methods
     // =========================================================================
@@ -74,9 +84,23 @@ class AbTest extends Plugin
         parent::init();
         self::$plugin = $this;
 
+        $this->_setPluginComponents();
+
         $request = Craft::$app->getRequest();
         $response = Craft::$app->getResponse();
 
+        // Register our CP routes
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            static function(RegisterUrlRulesEvent $event) {
+                $event->rules['ab-test/experiments'] = 'ab-test/experiments/index';
+                $event->rules['ab-test/experiments/new'] = 'ab-test/experiments/edit';
+                $event->rules['ab-test/experiments/<experimentId:\d+>'] = 'ab-test/experiments/edit';
+            }
+        );
+
+        // TODO: POC
         Event::on(Application::class, Application::EVENT_INIT,
             function() use($request, $response) {
                 if ($response->getIsOk() && $request->getIsSiteRequest()) {
@@ -166,7 +190,23 @@ class AbTest extends Plugin
             });
         }
 
+    }
 
+    /**
+     * @inheritdoc
+     */
+    public function getCpNavItem()
+    {
+        $ret = parent::getCpNavItem();
+
+        $ret['label'] = Craft::t('ab-test', 'A/B Test');
+
+        $ret['subnav']['experiments'] = [
+            'label' => Craft::t('ab-test', 'Experiments'),
+            'url' => 'ab-test/experiments'
+        ];
+
+        return $ret;
     }
 
 }
