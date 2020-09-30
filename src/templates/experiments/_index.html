@@ -32,19 +32,23 @@
         title: experiment.name|t('site'),
         url: url('ab-test/experiments/' ~ experiment.id),
         name: experiment.name|t('site')|e,
+        startDate: experiment.startDate ? experiment.startDate|datetime('short') : null,
+        endDate: experiment.endDate ? experiment.endDate|datetime('short') : null,
     }]) %}
 {% endfor %}
 
 {% js %}
     var columns = [
         { name: '__slot:title', title: Craft.t('app', 'Name') },
+        { name: 'startDate', title: Craft.t('ab-test', 'Start Date') },
+        { name: 'endDate', title: Craft.t('ab-test', 'End Date') },
     ];
 
     new Craft.VueAdminTable({
-    columns: columns,
-    container: '#abtest-experiments-vue-admin-table',
-    deleteAction: 'ab-test/experiments/delete',
-    emptyMessage: Craft.t('ab-test', 'No experiments exist yet.'),
-    tableData: {{ tableData|json_encode|raw }}
+        columns: columns,
+        container: '#abtest-experiments-vue-admin-table',
+        deleteAction: 'ab-test/experiments/delete',
+        emptyMessage: Craft.t('ab-test', 'No experiments exist yet.'),
+        tableData: {{ tableData|json_encode|raw }},
     });
 {% endjs %}
