@@ -107,7 +107,7 @@ class AbTest extends Plugin
 
                 /** @var  $entry Entry */
                 $entry = $context['entry'];
-                if ($entry !== null) {
+                if ($entry !== null && !$entry->getIsDraft()) {
 
                     $experiments = $this->getExperiments()->getAllExperiments();
                     if ($experiments) {
@@ -136,6 +136,7 @@ class AbTest extends Plugin
                                     'id' => $draft->id,
                                     'draftId' => $draft->draftId,
                                     'title' => $draft->draftName,
+                                    'note' => $draft->draftNotes,
                                 ];
                             }
 

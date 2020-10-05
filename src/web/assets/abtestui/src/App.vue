@@ -15,11 +15,13 @@
         </div>
 
         <template v-if="hasExperiments">
-            <checkbox v-for="draft in drafts"
-                      :label="draft.title"
-                      :key="draft.id"
-                      class="field"
-                      :checked="false" />
+            <div v-for="draft in drafts" class="field draft-field" :key="draft.id">
+                <checkbox :label="draft.title" :checked="false" />
+
+                <div v-if="draft.note" class="instructions">
+                    <p>{{ draft.note }}</p>
+                </div>
+            </div>
         </template>
 
         <button class="btn submit" @click.prevent="actionUpdate">Update</button>
@@ -84,11 +86,20 @@
             float: right;
         }
 
-        .c-checkbox {
-            padding: 14px 24px 10px 24px !important;
+        .draft-field {
+            padding: 14px 24px 10px 24px;
+
+            .c-field {
+                width: 100%;
+                margin-bottom: 0;
+            }
 
             label {
                 width: 100%;
+            }
+
+            .instructions {
+                margin-left: 24px;
             }
         }
     }
