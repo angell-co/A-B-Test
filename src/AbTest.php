@@ -186,7 +186,8 @@ class AbTest extends Plugin
                     $entry = $event->element;
 
                     // Dumb check if its a draft ID so we don’t get a loop due to this event handler firing again when
-                    // we populate the draft lower down - refactor obvs
+                    // we populate the draft lower down
+                    // TODO: refactor this check
                     if (!$entry->draftId) {
 
                         $cookie = $request->getCookies()->get('abtest_1');
@@ -196,7 +197,8 @@ class AbTest extends Plugin
                         }
 
                         if ($cookie && $cookie->value === 'test') {
-                            // Get draft IDs
+                            // TODO: Get draft IDs - this is currently getting the latest draft available, not one in
+                            // our test
                             $query = Entry::find()
                                 ->draftOf($entry)
                                 ->siteId($entry->siteId)

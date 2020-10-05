@@ -30,6 +30,7 @@ class ExperimentDraftsController extends Controller
     // =========================================================================
 
     /**
+     * @return \yii\web\Response
      * @throws \yii\web\BadRequestHttpException
      */
     public function actionSave()
