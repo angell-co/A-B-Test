@@ -13,6 +13,7 @@ namespace angellco\abtest\migrations;
 use angellco\abtest\db\Table;
 use Craft;
 use craft\db\Migration;
+use craft\helpers\MigrationHelper;
 
 /**
  * Class Install
@@ -45,7 +46,8 @@ class Install extends Migration
      */
     public function safeDown()
     {
-        $this->removeTables();
+        $this->dropForeignKeys();
+        $this->dropTables();
 
         return true;
     }
@@ -82,6 +84,23 @@ class Install extends Migration
             );
         }
 
+        // Experiments_Drafts table
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Table::EXPERIMENTS_DRAFTS);
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                Table::EXPERIMENTS_DRAFTS,
+                [
+                    'id' => $this->primaryKey(),
+                    'experimentId' => $this->integer()->notNull(),
+                    'draftId' => $this->integer()->notNull(),
+                    'dateCreated' => $this->dateTime()->notNull(),
+                    'dateUpdated' => $this->dateTime()->notNull(),
+                    'uid' => $this->uid(),
+                ]
+            );
+        }
+
         return $tablesCreated;
     }
 
@@ -92,6 +111,7 @@ class Install extends Migration
      */
     protected function createIndexes()
     {
+        $this->createIndex(null, Table::EXPERIMENTS_DRAFTS, ['experimentId', 'draftId'], true);
     }
 
     /**
@@ -101,6 +121,21 @@ class Install extends Migration
      */
     protected function addForeignKeys()
     {
+        $this->addForeignKey(null, Table::EXPERIMENTS_DRAFTS, ['experimentId'], Table::EXPERIMENTS, ['id'], 'CASCADE', 'CASCADE');
+        $this->addForeignKey(null, Table::EXPERIMENTS_DRAFTS, ['draftId'], \craft\db\Table::DRAFTS, ['id'], 'CASCADE', 'CASCADE');
+    }
+
+    /**
+     * Removes the foreign keys
+     *
+     * @return void
+     */
+    protected function dropForeignKeys()
+    {
+        if (Craft::$app->db->schema->getTableSchema(Table::EXPERIMENTS_DRAFTS)) {
+            MigrationHelper::dropAllForeignKeysToTable(Table::EXPERIMENTS_DRAFTS, $this);
+            MigrationHelper::dropAllForeignKeysOnTable(Table::EXPERIMENTS_DRAFTS, $this);
+        }
     }
 
     /**
@@ -108,8 +143,9 @@ class Install extends Migration
      *
      * @return void
      */
-    protected function removeTables()
+    protected function dropTables()
     {
+        $this->dropTableIfExists(Table::EXPERIMENTS_DRAFTS);
         $this->dropTableIfExists(Table::EXPERIMENTS);
     }
 

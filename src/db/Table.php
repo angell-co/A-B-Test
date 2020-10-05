@@ -20,4 +20,5 @@ namespace angellco\abtest\db;
 abstract class Table
 {
     const EXPERIMENTS = '{{%abtest_experiments}}';
+    const EXPERIMENTS_DRAFTS = '{{%abtest_experiments_drafts}}';
 }

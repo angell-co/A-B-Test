@@ -109,10 +109,11 @@ class AbTest extends Plugin
                 $entry = $context['entry'];
                 if ($entry !== null && !$entry->getIsDraft()) {
 
+                    $experimentOptions = [];
+                    $draftData = [];
                     $experiments = $this->getExperiments()->getAllExperiments();
-                    if ($experiments) {
 
-                        $experimentOptions = [];
+                    if ($experiments) {
                         foreach ($experiments as $experiment) {
                             $experimentOptions[] = [
                                 'label' => $experiment->name,
@@ -139,13 +140,14 @@ class AbTest extends Plugin
                                     'note' => $draft->draftNotes,
                                 ];
                             }
-
-                            $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
-                                'experimentOptions' => $experimentOptions,
-                                'drafts' => $draftData
-                            ]);
                         }
                     }
+
+                    $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
+                        'experimentOptions' => $experimentOptions,
+                        'drafts' => $draftData
+                    ]);
+
                 }
 
                 return $html;

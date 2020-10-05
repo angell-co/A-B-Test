@@ -10,31 +10,31 @@
                       class="field"
                       v-if="hasExperiments"
                       :options="experimentOptions"
-                      v-model="experimentSelect">
+                      v-model="experimentId">
             </dropdown>
 
-            <span v-else class="error">You don’t have any experiments set up,<br><a href="/admin/ab-test/experiments">set one up now</a>.</span>
+            <span v-else class="error">You don’t have any experiments set up,<br><a :href="Craft.getCpUrl('ab-test/experiments')">set one up now</a>.</span>
         </div>
 
         <template v-if="hasExperiments">
             <div v-for="draft in drafts" class="field draft-field" :key="draft.id">
-                <checkbox :label="draft.title" :checked="false" />
+                <checkbox :label="draft.title" :value="draft.draftId" v-model="draftIds" />
 
                 <div v-if="draft.note" class="instructions">
                     <p>{{ draft.note }}</p>
                 </div>
             </div>
-        </template>
 
-        <div class="footer">
-            <div class="spinner" v-if="loading"></div>
-            <button class="btn submit" @click.prevent="actionUpdate">Update</button>
-        </div>
+            <div class="footer">
+                <div class="spinner" v-if="loading"></div>
+                <button class="btn submit" @click.prevent="actionUpdate">Update</button>
+            </div>
+        </template>
     </div>
 </template>
 
 <script>
-    /* global Craft, Vue */
+    /* global axios, Craft */
 
     export default {
         components: {
@@ -54,7 +54,8 @@
 
         data() {
             return {
-                experimentSelect: this.experimentOptions.length >= 1 ? this.experimentOptions[0].value : null,
+                experimentId: this.experimentOptions.length >= 1 ? this.experimentOptions[0].value : null,
+                draftIds: [],
                 loading: false
             }
         },
@@ -71,7 +72,23 @@
 
                 this.loading = true;
 
-                // TODO Do the ajax
+                axios.post(Craft.getActionUrl('ab-test/experiment-drafts/save'), {
+                    experimentId: this.experimentId,
+                    draftIds: this.draftIds
+                }, {
+                    headers: {
+                        'X-CSRF-Token':  Craft.csrfTokenValue,
+                    }
+                })
+                    .then( (response) => {
+                        this.loading = false;
+                        console.log(response);
+                    })
+                    .catch( (error) => {
+                        this.loading = false;
+                        console.log(error);
+                    });
+
             }
         },
 
