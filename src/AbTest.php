@@ -129,9 +129,19 @@ class AbTest extends Plugin
                             ->all();
 
                         if ($drafts) {
+
+                            $draftData = [];
+                            foreach ($drafts as $draft) {
+                                $draftData[] = [
+                                    'id' => $draft->id,
+                                    'draftId' => $draft->draftId,
+                                    'title' => $draft->draftName,
+                                ];
+                            }
+
                             $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
                                 'experimentOptions' => $experimentOptions,
-                                'drafts' => $drafts
+                                'drafts' => $draftData
                             ]);
                         }
                     }
