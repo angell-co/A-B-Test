@@ -5,6 +5,7 @@
 
             <dropdown label="Experiment"
                       instructions="Choose an experiment and then switch on the drafts you want it to include."
+                      class="field"
                       v-if="hasExperiments"
                       :options="experimentOptions"
                       v-model="experimentSelect">
@@ -14,11 +15,11 @@
         </div>
 
         <template v-if="hasExperiments">
-            <lightswitch v-for="draft in drafts"
-                         :label="draft.title"
-                         :key="draft.id"
-                         class="field"
-                         :checked="false" />
+            <checkbox v-for="draft in drafts"
+                      :label="draft.title"
+                      :key="draft.id"
+                      class="field"
+                      :checked="false" />
         </template>
     </div>
 </template>
@@ -69,9 +70,16 @@
     .meta > .field:first-of-type {
         padding-top: 20px;
         padding-bottom: 20px;
+    }
 
-        h2 {
-            margin-bottom: 20px;
+
+    .c-checkbox {
+        padding: 14px 24px 10px 24px !important;
+
+        label {
+            width: 100%;
         }
     }
+
+
 </style>
