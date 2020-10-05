@@ -1,8 +1,10 @@
 <template>
     <div class="meta">
-        <div class="field">
+        <div class="header">
             <h2>A/B Test</h2>
+        </div>
 
+        <div class="field draft-field">
             <dropdown label="Experiment"
                       instructions="Choose an experiment and then switch on the drafts you want it to include."
                       class="field"
@@ -24,7 +26,10 @@
             </div>
         </template>
 
-        <button class="btn submit" @click.prevent="actionUpdate">Update</button>
+        <div class="footer">
+            <div class="spinner" v-if="loading"></div>
+            <button class="btn submit" @click.prevent="actionUpdate">Update</button>
+        </div>
     </div>
 </template>
 
@@ -49,7 +54,8 @@
 
         data() {
             return {
-                experimentSelect: this.experimentOptions.length >= 1 ? this.experimentOptions[0].value : null
+                experimentSelect: this.experimentOptions.length >= 1 ? this.experimentOptions[0].value : null,
+                loading: false
             }
         },
 
@@ -58,7 +64,15 @@
         },
 
         methods: {
-            actionUpdate() {}
+            actionUpdate() {
+                if (this.loading) {
+                    return;
+                }
+
+                this.loading = true;
+
+                // TODO Do the ajax
+            }
         },
 
         computed: {
@@ -81,26 +95,36 @@
         }
 
         .btn {
-            margin-top: 20px;
-            margin-bottom: 20px;
             float: right;
         }
 
-        .draft-field {
+        > .field.draft-field {
             padding: 14px 24px 10px 24px;
 
-            .c-field {
+            /deep/ .c-field {
                 width: 100%;
                 margin-bottom: 0;
-            }
 
-            label {
-                width: 100%;
+                 label {
+                    font-weight: bold;
+                    color: #606d7b;
+                    width: 100%;
+                }
             }
 
             .instructions {
                 margin-left: 24px;
             }
+        }
+
+        .header,
+        .footer {
+            margin: 0 -24px;
+        }
+
+
+        .header + .draft-field {
+            border-top: 0;
         }
     }
 </style>
