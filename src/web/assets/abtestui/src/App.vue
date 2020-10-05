@@ -21,6 +21,8 @@
                       class="field"
                       :checked="false" />
         </template>
+
+        <button class="btn submit" @click.prevent="actionUpdate">Update</button>
     </div>
 </template>
 
@@ -54,6 +56,7 @@
         },
 
         methods: {
+            actionUpdate() {}
         },
 
         computed: {
@@ -64,22 +67,29 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import "~@pixelandtonic/craftui/dist/craftui.css";
 
-    .meta > .field:first-of-type {
-        padding-top: 20px;
-        padding-bottom: 20px;
-    }
+    .meta {
+        overflow: hidden;
 
+        > .field:first-of-type {
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
 
-    .c-checkbox {
-        padding: 14px 24px 10px 24px !important;
+        .btn {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            float: right;
+        }
 
-        label {
-            width: 100%;
+        .c-checkbox {
+            padding: 14px 24px 10px 24px !important;
+
+            label {
+                width: 100%;
+            }
         }
     }
-
-
 </style>
