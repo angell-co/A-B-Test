@@ -10,8 +10,12 @@
 
 namespace angellco\abtest\models;
 
+use angellco\abtest\records\ExperimentDraft;
 use Craft;
 use craft\base\Model;
+use craft\db\Query;
+use craft\db\Table;
+use craft\elements\Entry;
 
 /**
  * Experiment model.
@@ -48,6 +52,11 @@ class Experiment extends Model
     public $uid;
 
     /**
+     * @var array|null Array of draft entries
+     */
+    private $_drafts;
+
+    /**
      * @inheritdoc
      */
     public function attributeLabels()
@@ -55,6 +64,16 @@ class Experiment extends Model
         return [
             'name' => Craft::t('app', 'Name'),
         ];
+    }
+
+    /**
+     * Use the translated experiments name as the string representation.
+     *
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return Craft::t('site', $this->name) ?: static::class;
     }
 
     /**
@@ -83,14 +102,41 @@ class Experiment extends Model
 //        return $rules;
 //    }
 
-    /**
-     * Use the translated experiments name as the string representation.
-     *
-     * @return string
-     */
-    public function __toString(): string
+
+    public function getDrafts(): array
     {
-        return Craft::t('site', $this->name) ?: static::class;
+        if ($this->_drafts !== null) {
+            return $this->_drafts;
+        }
+
+        $draftIds = ExperimentDraft::find()
+            ->select('draftId')
+            ->where(['experimentId' => $this->id])
+            ->column();
+
+        if (!$draftIds) {
+            return [];
+        }
+
+        $this->_drafts = [];
+        foreach ($draftIds as $draftId) {
+            $this->_drafts[] = Entry::find()
+                ->draftId($draftId)
+                ->anyStatus()
+                ->one();
+        }
+
+        return $this->_drafts;
+    }
+
+    public function getControl(): Entry
+    {
+
+        if (!$this->getDrafts()) {
+            return false;
+        }
+
+        return $this->getDrafts()[0]->getSource();
     }
 
 }

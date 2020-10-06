@@ -12,12 +12,14 @@ namespace angellco\abtest\records;
 
 use angellco\abtest\db\Table;
 use craft\db\ActiveRecord;
+use yii\db\ActiveQueryInterface;
 
 /**
  * Experiment / draft relationship record
  *
  * @property int $experimentId
  * @property int $draftId
+ * @property ActiveQueryInterface $experiment
  *
  * @author    Angell & Co
  * @package   AbTest
@@ -31,5 +33,13 @@ class ExperimentDraft extends ActiveRecord
     public static function tableName(): string
     {
         return Table::EXPERIMENTS_DRAFTS;
+    }
+
+    /**
+     * @return ActiveQueryInterface
+     */
+    public function getExperiment(): ActiveQueryInterface
+    {
+        return $this->hasOne(Experiment::class, ['id' => 'experimentId']);
     }
 }

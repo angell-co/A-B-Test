@@ -68,9 +68,19 @@ class Experiments extends Component
      */
     public function getExperimentById(int $experimentId)
     {
+        // XXX
+        Craft::dd($this->_experiments()->firstWhere('id', $experimentId)->getControl());
+
         return $this->_experiments()->firstWhere('id', $experimentId);
     }
 
+    /**
+     * Saves an experiment.
+     *
+     * @param Experiment $model
+     * @param bool|bool $runValidation
+     * @return bool
+     */
     public function saveExperiment(Experiment $model, bool $runValidation = true): bool
     {
         if ($model->id) {

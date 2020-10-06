@@ -12,6 +12,7 @@ namespace angellco\abtest\records;
 use angellco\abtest\db\Table;
 use Craft;
 use craft\db\ActiveRecord;
+use yii\db\ActiveQueryInterface;
 
 /**
  * BlockType Record
@@ -20,6 +21,7 @@ use craft\db\ActiveRecord;
  * @property string $name Name
  * @property string $startDate Start date
  * @property string $endDate End date
+ * @property ActiveQueryInterface $experimentDrafts
  *
  * @author    Angell & Co
  * @package   AbTest
@@ -36,5 +38,13 @@ class Experiment extends ActiveRecord
     public static function tableName()
     {
         return Table::EXPERIMENTS;
+    }
+
+    /**
+     * @return ActiveQueryInterface
+     */
+    public function getExperimentDrafts(): ActiveQueryInterface
+    {
+        return $this->hasMany(ExperimentDraft::class, ['experimentId' => 'id']);
     }
 }
