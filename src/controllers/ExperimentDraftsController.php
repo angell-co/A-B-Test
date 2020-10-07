@@ -15,6 +15,7 @@ use angellco\abtest\models\Experiment;
 use angellco\abtest\records\ExperimentDraft;
 use Craft;
 use craft\web\Controller;
+use yii\web\Response;
 
 /**
  * Experiment drafts controller.
@@ -65,9 +66,12 @@ class ExperimentDraftsController extends Controller
     }
 
     /**
+     * Deletes a draft / experiment relation.
      *
+     * @return Response
+     * @throws \yii\web\BadRequestHttpException
      */
-    public function actionRemove()
+    public function actionDelete(): Response
     {
         $this->requirePostRequest();
         $this->requireAcceptsJson();

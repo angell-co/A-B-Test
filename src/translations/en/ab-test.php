@@ -24,5 +24,6 @@ return [
     'End Date' => 'End Date',
     'No experiment exists with the ID “{id}”' => 'No experiment exists with the ID “{id}”',
     'Experiment saved.' => 'Experiment saved.',
-    'Couldn’t save experiment.' => 'Couldn’t save experiment.'
+    'Couldn’t save experiment.' => 'Couldn’t save experiment.',
+    'No. of items' => 'No. of items'
 ];

@@ -9,6 +9,9 @@
 ]) %}
 
 {% do view.registerTranslations('ab-test', [
+    'Start Date',
+    'End Date',
+    'No. of items',
     'No experiments exist yet.',
 ]) %}
 
@@ -32,6 +35,7 @@
         url: url('ab-test/experiments/' ~ experiment.id),
         startDate: experiment.startDate ? experiment.startDate|datetime('short') : null,
         endDate: experiment.endDate ? experiment.endDate|datetime('short') : null,
+        itemCount: experiment.getDrafts() ? experiment.getDrafts()|length + 1 : null
     }]) %}
 {% endfor %}
 
@@ -40,6 +44,7 @@
         { name: '__slot:title', title: Craft.t('app', 'Name') },
         { name: 'startDate', title: Craft.t('ab-test', 'Start Date') },
         { name: 'endDate', title: Craft.t('ab-test', 'End Date') },
+        { name: 'itemCount', title: Craft.t('ab-test', 'No. of items') },
     ];
 
     new Craft.VueAdminTable({

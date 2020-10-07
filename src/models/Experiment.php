@@ -94,21 +94,6 @@ class Experiment extends Model
     }
 
     /**
-     * @inheritdoc
-     */
-//    protected function defineRules(): array
-//    {
-//        $rules = parent::defineRules();
-//        $rules[] = [['id', 'fieldLayoutId'], 'number', 'integerOnly' => true];
-//        $rules[] = [['handle'], HandleValidator::class, 'reservedWords' => ['id', 'dateCreated', 'dateUpdated', 'uid', 'title']];
-//        $rules[] = [['name', 'handle'], UniqueValidator::class, 'targetClass' => TagGroupRecord::class];
-//        $rules[] = [['name', 'handle'], 'required'];
-//        $rules[] = [['name', 'handle'], 'string', 'max' => 255];
-//        return $rules;
-//    }
-
-
-    /**
      * Returns all the drafts attached to this experiment
      *
      * @return array
