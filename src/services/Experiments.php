@@ -68,9 +68,6 @@ class Experiments extends Component
      */
     public function getExperimentById(int $experimentId)
     {
-        // XXX
-        Craft::dd($this->_experiments()->firstWhere('id', $experimentId)->getControl());
-
         return $this->_experiments()->firstWhere('id', $experimentId);
     }
 

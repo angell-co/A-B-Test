@@ -64,4 +64,18 @@ class ExperimentDraftsController extends Controller
         return $this->asErrorJson('Ooops');
     }
 
+    /**
+     *
+     */
+    public function actionRemove()
+    {
+        $this->requirePostRequest();
+        $this->requireAcceptsJson();
+
+        $draftId = $this->request->getRequiredBodyParam('id');
+
+        ExperimentDraft::deleteAll(['draftId' => $draftId]);
+
+        return $this->asJson(['success' => true]);
+    }
 }

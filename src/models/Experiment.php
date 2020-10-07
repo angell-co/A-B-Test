@@ -52,9 +52,14 @@ class Experiment extends Model
     public $uid;
 
     /**
-     * @var array|null Array of draft entries
+     * @var Entry[]|null Array of draft entries
      */
     private $_drafts;
+
+    /**
+     * @var Entry|null
+     */
+    private $_control;
 
     /**
      * @inheritdoc
@@ -103,6 +108,11 @@ class Experiment extends Model
 //    }
 
 
+    /**
+     * Returns all the drafts attached to this experiment
+     *
+     * @return array
+     */
     public function getDrafts(): array
     {
         if ($this->_drafts !== null) {
@@ -129,14 +139,24 @@ class Experiment extends Model
         return $this->_drafts;
     }
 
+    /**
+     * If there are drafts attached then this returns the control / primary entry
+     *
+     * @return Entry
+     */
     public function getControl(): Entry
     {
+        if ($this->_control !== null) {
+            return $this->_control;
+        }
 
         if (!$this->getDrafts()) {
             return false;
         }
 
-        return $this->getDrafts()[0]->getSource();
+        $this->_control = $this->getDrafts()[0]->getSource();
+
+        return $this->_control;
     }
 
 }

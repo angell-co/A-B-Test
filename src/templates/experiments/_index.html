@@ -6,7 +6,6 @@
 
 {% do view.registerTranslations('app', [
     'Name',
-    'Handle',
 ]) %}
 
 {% do view.registerTranslations('ab-test', [
@@ -31,7 +30,6 @@
         id: experiment.id,
         title: experiment.name|t('site'),
         url: url('ab-test/experiments/' ~ experiment.id),
-        name: experiment.name|t('site')|e,
         startDate: experiment.startDate ? experiment.startDate|datetime('short') : null,
         endDate: experiment.endDate ? experiment.endDate|datetime('short') : null,
     }]) %}
