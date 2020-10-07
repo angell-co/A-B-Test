@@ -1,6 +1,5 @@
 /* global Craft */
 /* global Garnish */
-/* global $ */
 
 import Vue from 'vue'
 import App from './App'
@@ -35,6 +34,7 @@ Craft.AbTest.EntrySidebar = Garnish.Base.extend({
 {
     defaults: {
         experimentOptions: [],
-        drafts: []
+        drafts: [],
+        experimentDrafts: []
     }
 });

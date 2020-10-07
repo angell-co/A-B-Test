@@ -5,7 +5,8 @@
 {% js %}
     new Craft.AbTest.EntrySidebar({
         experimentOptions: {{ experimentOptions|json_encode|raw }},
-        drafts: {{ drafts|json_encode|raw }}
+        drafts: {{ drafts|json_encode|raw }},
+        experimentDrafts: {{ experimentDrafts|json_encode|raw }}
     });
 {% endjs %}
 

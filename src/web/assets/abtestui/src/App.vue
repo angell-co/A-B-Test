@@ -36,6 +36,8 @@
 <script>
     /* global axios, Craft */
 
+    import _map from 'lodash/map';
+
     export default {
         components: {
 
@@ -49,19 +51,37 @@
             drafts: {
                 type: Array,
                 default: () => { return [] },
+            },
+            experimentDrafts: {
+                type: Array,
+                default: () => { return [] },
             }
         },
 
         data() {
+            // Find the selected experiment if there is one
+            let experimentId = null;
+
+            for (let i = 0; i < this.experimentOptions.length; i++) {
+                if (this.experimentOptions[i].checked) {
+                    experimentId = this.experimentOptions[i].value;
+                }
+            }
+
+            // Default to the first one in the list
+            if (!experimentId && this.experimentOptions.length >= 1) {
+                experimentId = this.experimentOptions[0].value;
+            }
+
             return {
-                experimentId: this.experimentOptions.length >= 1 ? this.experimentOptions[0].value : null,
-                draftIds: [],
+                experimentId: experimentId,
+                draftIds: this.experimentDrafts.length >= 1 ? _map(this.experimentDrafts, 'draftId') : [],
                 loading: false
             }
         },
 
         mounted() {
-            console.log(this.drafts)
+
         },
 
         methods: {
@@ -74,7 +94,8 @@
 
                 axios.post(Craft.getActionUrl('ab-test/experiment-drafts/save'), {
                     experimentId: this.experimentId,
-                    draftIds: this.draftIds
+                    draftIds: this.draftIds,
+                    allDraftIds: _map(this.drafts, 'draftId')
                 }, {
                     headers: {
                         'X-CSRF-Token':  Craft.csrfTokenValue,

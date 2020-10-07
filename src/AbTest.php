@@ -112,13 +112,15 @@ class AbTest extends Plugin
 
                     $experimentOptions = [];
                     $draftData = [];
+                    $expDrafts = [];
                     $experiments = $this->getExperiments()->getAllExperiments();
 
                     if ($experiments) {
                         foreach ($experiments as $experiment) {
                             $experimentOptions[] = [
                                 'label' => $experiment->name,
-                                'value' => $experiment->id
+                                'value' => $experiment->id,
+                                'checked' => false
                             ];
                         }
 
@@ -145,18 +147,34 @@ class AbTest extends Plugin
                             // Now we have the draft data we can get the relations records that already exist
                             // for those drafts, if there are any
                             $draftIds = array_column($draftData, 'draftId');
-                            $expDrafts = ExperimentDraft::find()
+                            $expDraftRecords = ExperimentDraft::find()
                                 ->where(['draftId' => $draftIds])
                                 ->all();
 
-                            Craft::dd($expDrafts);
+                            if ($expDraftRecords) {
+                                // Format them
+                                foreach ($expDraftRecords as $expDraftRecord) {
+                                    $expDrafts[] = [
+                                        'id' => $expDraftRecord['id'],
+                                        'experimentId' => $expDraftRecord['experimentId'],
+                                        'draftId' => $expDraftRecord['draftId']
+                                    ];
+                                }
 
+                                // Go through and select the experiment these drafts are related to
+                                foreach ($experimentOptions as &$experimentOption) {
+                                    if ($experimentOption['value'] === $expDrafts[0]['experimentId']) {
+                                        $experimentOption['checked'] = true;
+                                    }
+                                }
+                            }
                         }
                     }
 
                     $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
                         'experimentOptions' => $experimentOptions,
-                        'drafts' => $draftData
+                        'drafts' => $draftData,
+                        'experimentDrafts' => $expDrafts
                     ]);
 
                 }

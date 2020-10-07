@@ -14,6 +14,7 @@ use angellco\abtest\AbTest;
 use angellco\abtest\models\Experiment;
 use angellco\abtest\records\ExperimentDraft;
 use Craft;
+use craft\elements\Entry;
 use craft\web\Controller;
 use yii\web\Response;
 
@@ -39,13 +40,16 @@ class ExperimentDraftsController extends Controller
         $this->requirePostRequest();
         $this->requireAcceptsJson();
 
-        $experimentId = Craft::$app->getRequest()->getBodyParam('experimentId');
-        $draftIds = Craft::$app->getRequest()->getBodyParam('draftIds');
+        $experimentId = Craft::$app->getRequest()->getRequiredBodyParam('experimentId');
+        $draftIds = Craft::$app->getRequest()->getRequiredBodyParam('draftIds');
+        $allDraftIds = Craft::$app->getRequest()->getRequiredBodyParam('allDraftIds');
+
+        // Delete all records for all drafts of this entry so we definitely clear them all out
+        ExperimentDraft::deleteAll(['draftId' => $allDraftIds]);
 
         $db = Craft::$app->getDb();
         $transaction = $db->beginTransaction();
         try {
-            ExperimentDraft::deleteAll(['experimentId' => $experimentId]);
 
             foreach ($draftIds as $draftId) {
                 $record = new ExperimentDraft();
