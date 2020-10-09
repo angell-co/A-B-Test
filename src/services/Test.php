@@ -12,6 +12,7 @@ namespace angellco\abtest\services;
 
 use angellco\abtest\AbTest;
 use Craft;
+use craft\elements\Entry;
 use yii\base\Component;
 use yii\web\Cookie;
 
@@ -37,7 +38,7 @@ class Test extends Component
 
     public function cookie()
     {
-        if (!$this->_getActiveExperiments()) {
+        if (!$this->getActiveExperiments()) {
             return;
         }
 
@@ -45,7 +46,7 @@ class Test extends Component
         $response = Craft::$app->getResponse();
 
         // Sort out the cookies - one for each experiment
-        foreach ($this->_getActiveExperiments() as $activeExperiment) {
+        foreach ($this->getActiveExperiments() as $activeExperiment) {
 
             $cookieName = 'abtest_'.$activeExperiment['uid'];
             $cookie = $request->getCookies()->get($cookieName);
@@ -71,7 +72,7 @@ class Test extends Component
     }
 
 
-    private function _getActiveExperiments()
+    public function getActiveExperiments()
     {
         if ($this->_activeExperiments !== null) {
             return $this->_activeExperiments;
@@ -80,6 +81,62 @@ class Test extends Component
         $this->_activeExperiments = AbTest::$plugin->getExperiments()->getActiveExperiments();
 
         return $this->_activeExperiments;
+    }
+
+    // At this point we should make sure we know which source entry IDs we’re bothered about running tests with
+    // So, probably get all active experiments, get the control off them and bail if this ID doesn’t match
+    // any of our controls - this should be very performant! Check caching in the active experiments route.
+    public function getAlternateEntry(Entry $entry)
+    {
+        if (!$this->getActiveExperiments()) {
+            return false;
+        }
+
+        // Find the applicable experiment for this entry
+        $applicableExperiment = null;
+        foreach ($this->getActiveExperiments() as $activeExperiment) {
+            if ($activeExperiment['control']['id'] === $entry->id) {
+                $applicableExperiment = $activeExperiment;
+                break;
+            }
+        }
+
+        // Control isn’t set, because getControl() hasn’t been called in Experiments::_experimentWithDrafts
+
+        // getControl() is only used in the CP edit view, so we should probably find another way to do that bit
+        // and ditch the method as otherwise if we force it to get set in Experiments::_experimentWithDrafts we end up
+        // in a loop as the ElementQuery::EVENT_AFTER_POPULATE_ELEMENT event handler gets called again ...
+        Craft::dd($this->getActiveExperiments()[0]['control']);
+
+        // If there isn’t one, then bail
+        if (!$applicableExperiment) {
+            return false;
+        }
+
+        Craft::dd($applicableExperiment);
+
+        $cookie = $request->getCookies()->get('abtest_1');
+//
+//                        if (!$cookie) {
+//                            $cookie = $response->getCookies()->get('abtest_1');
+//                        }
+//
+//                        if ($cookie && $cookie->value === 'test') {
+//                            // TODO: Get draft IDs - this is currently getting the latest draft available, not one in
+//                            // our test
+//                            $query = Entry::find()
+//                                ->draftOf($entry)
+//                                ->siteId($entry->siteId)
+//                                ->anyStatus()
+//                                ->orderBy(['dateUpdated' => SORT_DESC])
+//                                ->limit(1);
+//                            $draftIds = $query->ids();
+//                            if ($draftIds) {
+//                                $selectedEntry = Craft::$app->getElements()->getElementById($draftIds[0]);
+//                                $event->element = $selectedEntry;
+//                            }
+//                        }
+
     }
 
 }

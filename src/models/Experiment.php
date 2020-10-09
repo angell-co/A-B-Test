@@ -55,12 +55,12 @@ class Experiment extends Model
     /**
      * @var Entry[]|null Array of draft entries
      */
-    private $_drafts;
+    public $drafts;
 
     /**
      * @var Entry|null
      */
-    private $_control;
+    public $control;
 
     /**
      * @inheritdoc
@@ -109,8 +109,8 @@ class Experiment extends Model
      */
     public function getDrafts(): array
     {
-        if ($this->_drafts !== null) {
-            return $this->_drafts;
+        if ($this->drafts !== null) {
+            return $this->drafts;
         }
 
         $draftIds = ExperimentDraft::find()
@@ -122,15 +122,15 @@ class Experiment extends Model
             return [];
         }
 
-        $this->_drafts = [];
+        $this->drafts = [];
         foreach ($draftIds as $draftId) {
-            $this->_drafts[] = Entry::find()
+            $this->drafts[] = Entry::find()
                 ->draftId($draftId)
                 ->anyStatus()
                 ->one();
         }
 
-        return $this->_drafts;
+        return $this->drafts;
     }
 
     /**
@@ -140,17 +140,17 @@ class Experiment extends Model
      */
     public function getControl(): Entry
     {
-        if ($this->_control !== null) {
-            return $this->_control;
+        if ($this->control !== null) {
+            return $this->control;
         }
 
         if (!$this->getDrafts()) {
             return false;
         }
 
-        $this->_control = $this->getDrafts()[0]->getSource();
+        $this->control = $this->getDrafts()[0]->getSource();
 
-        return $this->_control;
+        return $this->control;
     }
 
 }

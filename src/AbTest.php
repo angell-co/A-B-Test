@@ -198,8 +198,7 @@ class AbTest extends Plugin
 
         // When populating an element on the front-end, check the cookies to see if we need to swap in a draft
         Event::on(ElementQuery::class, ElementQuery::EVENT_AFTER_POPULATE_ELEMENT,
-            function(PopulateElementEvent $event) use($request, $response) {
-
+            function(PopulateElementEvent $event) use($request, $response, $test) {
                 if ($response->getIsOk() && $request->getIsSiteRequest() && $event->element !== null && is_a($event->element, Entry::class)) {
 
                     /** @var Entry $entry */
@@ -209,35 +208,10 @@ class AbTest extends Plugin
                     // we populate the draft lower down
                     // TODO: refactor this check
                     if (!$entry->draftId) {
-
-                        // NOTE: this is where I am up to
-
-                        // At this point we should make sure we know which source entry IDs we’re bothered about running tests with
-                        // So, probably get all active experiments, get the control off them and bail if this ID doesn’t match
-                        // any of our controls - this should be very performant! Check caching in the active experiments route.
-
-
-//                        $cookie = $request->getCookies()->get('abtest_1');
-//
-//                        if (!$cookie) {
-//                            $cookie = $response->getCookies()->get('abtest_1');
-//                        }
-//
-//                        if ($cookie && $cookie->value === 'test') {
-//                            // TODO: Get draft IDs - this is currently getting the latest draft available, not one in
-//                            // our test
-//                            $query = Entry::find()
-//                                ->draftOf($entry)
-//                                ->siteId($entry->siteId)
-//                                ->anyStatus()
-//                                ->orderBy(['dateUpdated' => SORT_DESC])
-//                                ->limit(1);
-//                            $draftIds = $query->ids();
-//                            if ($draftIds) {
-//                                $selectedEntry = Craft::$app->getElements()->getElementById($draftIds[0]);
-//                                $event->element = $selectedEntry;
-//                            }
-//                        }
+                        $alternateEntry = $test->getAlternateEntry($entry);
+                        if ($alternateEntry) {
+                            $event->element = $alternateEntry;
+                        }
                     }
                 }
             }
