@@ -13,6 +13,7 @@ namespace angellco\abtest;
 use angellco\abtest\base\PluginTrait;
 use angellco\abtest\records\ExperimentDraft;
 use angellco\abtest\services\Experiments;
+use angellco\abtest\services\Test;
 use Craft;
 use craft\base\Plugin;
 use craft\db\Query;
@@ -35,6 +36,8 @@ use yii\web\Cookie;
  *
  * @property Experiments $experiments The Experiments component.
  * @method Experiments getExperiments() Returns the Experiments component.
+ * @property Test $test The Test component.
+ * @method Test getTest() Returns the Test component.
  *
  * @author    Angell & Co
  * @package   AbTest
@@ -183,29 +186,17 @@ class AbTest extends Plugin
             });
         }
 
-        // TODO: POC
+        // Cookie the user for all active experiments
+        $test = $this->getTest();
         Event::on(Application::class, Application::EVENT_INIT,
-            function() use($request, $response) {
+            function() use($request, $response, $test) {
                 if ($response->getIsOk() && $request->getIsSiteRequest()) {
-                    $cookie = $request->getCookies()->get('abtest_1');
-                    if (!$cookie) {
-                        $cookie = new Cookie([
-                            'name' => 'abtest_1'
-                        ]);
-
-                        // Decide if control or not
-                        if (rand(0, 1) === 0) {
-                            $cookie->value = 'control';
-                        } else {
-                            $cookie->value = 'test';
-                        }
-
-                        $response->getCookies()->add($cookie);
-                    }
+                    $test->cookie();
                 }
             }
         );
 
+        // When populating an element on the front-end, check the cookies to see if we need to swap in a draft
         Event::on(ElementQuery::class, ElementQuery::EVENT_AFTER_POPULATE_ELEMENT,
             function(PopulateElementEvent $event) use($request, $response) {
 
@@ -219,27 +210,34 @@ class AbTest extends Plugin
                     // TODO: refactor this check
                     if (!$entry->draftId) {
 
-                        $cookie = $request->getCookies()->get('abtest_1');
+                        // NOTE: this is where I am up to
 
-                        if (!$cookie) {
-                            $cookie = $response->getCookies()->get('abtest_1');
-                        }
+                        // At this point we should make sure we know which source entry IDs we’re bothered about running tests with
+                        // So, probably get all active experiments, get the control off them and bail if this ID doesn’t match
+                        // any of our controls - this should be very performant! Check caching in the active experiments route.
 
-                        if ($cookie && $cookie->value === 'test') {
-                            // TODO: Get draft IDs - this is currently getting the latest draft available, not one in
-                            // our test
-                            $query = Entry::find()
-                                ->draftOf($entry)
-                                ->siteId($entry->siteId)
-                                ->anyStatus()
-                                ->orderBy(['dateUpdated' => SORT_DESC])
-                                ->limit(1);
-                            $draftIds = $query->ids();
-                            if ($draftIds) {
-                                $selectedEntry = Craft::$app->getElements()->getElementById($draftIds[0]);
-                                $event->element = $selectedEntry;
-                            }
-                        }
+
+//                        $cookie = $request->getCookies()->get('abtest_1');
+//
+//                        if (!$cookie) {
+//                            $cookie = $response->getCookies()->get('abtest_1');
+//                        }
+//
+//                        if ($cookie && $cookie->value === 'test') {
+//                            // TODO: Get draft IDs - this is currently getting the latest draft available, not one in
+//                            // our test
+//                            $query = Entry::find()
+//                                ->draftOf($entry)
+//                                ->siteId($entry->siteId)
+//                                ->anyStatus()
+//                                ->orderBy(['dateUpdated' => SORT_DESC])
+//                                ->limit(1);
+//                            $draftIds = $query->ids();
+//                            if ($draftIds) {
+//                                $selectedEntry = Craft::$app->getElements()->getElementById($draftIds[0]);
+//                                $event->element = $selectedEntry;
+//                            }
+//                        }
                     }
                 }
             }

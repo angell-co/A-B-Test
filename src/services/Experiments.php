@@ -15,6 +15,7 @@ use angellco\abtest\models\Experiment;
 use angellco\abtest\records\Experiment as ExperimentRecord;
 use Craft;
 use craft\base\MemoizableArray;
+use craft\helpers\DateTimeHelper;
 use yii\base\Component;
 
 /**
@@ -69,6 +70,61 @@ class Experiments extends Component
     public function getExperimentById(int $experimentId)
     {
         return $this->_experiments()->firstWhere('id', $experimentId);
+    }
+
+    /**
+     * Returns a plain array of active experiments.
+     *
+     * @return array
+     */
+    public function getActiveExperiments(): array
+    {
+        $currentTime = DateTimeHelper::currentTimeStamp();
+
+        // TODO: cache this?
+        $active = [];
+
+        /** @var Experiment $experiment */
+        foreach ($this->_experiments() as $experiment) {
+
+            // No dates
+            if (!$experiment->startDate && !$experiment->endDate) {
+                if ($exp = $this->_experimentWithDrafts($experiment)) {
+                    $active[] = $exp;
+                }
+                continue;
+            }
+
+            // Both dates
+            if ($experiment->startDate && $experiment->endDate) {
+
+                if ($currentTime >= $experiment->startDate->format('U') && $currentTime <= $experiment->endDate->format('U')) {
+                    if ($exp = $this->_experimentWithDrafts($experiment)) {
+                        $active[] = $exp;
+                    }
+                    continue;
+                }
+
+            }
+
+            // End date
+            if ($experiment->endDate && $currentTime <= $experiment->endDate->format('U')) {
+                if ($exp = $this->_experimentWithDrafts($experiment)) {
+                    $active[] = $exp;
+                }
+                continue;
+            }
+
+            // Start date
+            if ($experiment->startDate && $currentTime >= $experiment->startDate->format('U')) {
+                if ($exp = $this->_experimentWithDrafts($experiment)) {
+                    $active[] = $exp;
+                }
+            }
+
+        }
+
+        return $active;
     }
 
     /**
@@ -173,6 +229,7 @@ class Experiments extends Component
                     'name',
                     'startDate',
                     'endDate',
+                    'uid'
                 ]));
             }
 
@@ -180,6 +237,15 @@ class Experiments extends Component
         }
 
         return $this->_experiments;
+    }
+
+    private function _experimentWithDrafts(Experiment $experiment)
+    {
+        if ($experiment->getDrafts()) {
+            return $experiment->toArray(['*'], ['drafts','control']);
+        }
+
+        return false;
     }
 
 }

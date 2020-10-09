@@ -12,11 +12,14 @@ namespace angellco\abtest\base;
 
 use angellco\abtest\services\Experiments;
 use angellco\abtest\AbTest;
+use angellco\abtest\services\Test;
 
 /**
  * Trait PluginTrait
  *
  * @property-read Experiments $experiments The experiments service
+ * @property-read Test $test The test service
+ *
  * @package angellco\abtest\base
  */
 trait PluginTrait
@@ -40,6 +43,14 @@ trait PluginTrait
         return $this->get('experiments');
     }
 
+    /**
+     * @return Test
+     */
+    public function getTest(): Test
+    {
+        return $this->get('test');
+    }
+
     // Private Methods
     // =========================================================================
 
@@ -47,6 +58,7 @@ trait PluginTrait
     {
         $this->setComponents([
             'experiments' => Experiments::class,
+            'test' => Test::class,
         ]);
     }
 }

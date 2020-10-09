@@ -16,6 +16,7 @@ use craft\base\Model;
 use craft\db\Query;
 use craft\db\Table;
 use craft\elements\Entry;
+use craft\helpers\ElementHelper;
 
 /**
  * Experiment model.
@@ -91,6 +92,14 @@ class Experiment extends Model
         $attributes[] = 'endDate';
 
         return $attributes;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function extraFields()
+    {
+        return ['drafts', 'control'];
     }
 
     /**
