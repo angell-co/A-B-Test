@@ -27,6 +27,14 @@ use craft\helpers\ElementHelper;
  */
 class Experiment extends Model
 {
+    // Constants
+    // =========================================================================
+
+    const COOKIE_PREFIX = 'CRAFT_AB_';
+
+    // Public Properties
+    // =========================================================================
+
     /**
      * @var int|null ID
      */
@@ -53,14 +61,25 @@ class Experiment extends Model
     public $uid;
 
     /**
+     * @var string|null The name of the cookie
+     */
+    public $cookieName;
+
+    /**
      * @var Entry[]|null Array of draft entries
      */
     public $drafts;
 
+    // Private Properties
+    // =========================================================================
+
     /**
      * @var Entry|null
      */
-    public $control;
+    private $_control;
+
+    // Public Methods
+    // =========================================================================
 
     /**
      * @inheritdoc
@@ -99,7 +118,7 @@ class Experiment extends Model
      */
     public function extraFields()
     {
-        return ['drafts', 'control'];
+        return ['drafts','controlId','cookieName'];
     }
 
     /**
@@ -134,23 +153,63 @@ class Experiment extends Model
     }
 
     /**
-     * If there are drafts attached then this returns the control / primary entry
+     * If there are drafts attached then this returns the control / primary entry.
      *
-     * @return Entry
+     * You have to be careful _not_ to call this whilst the ElementQuery::EVENT_AFTER_POPULATE_ELEMENT
+     * is running the show - if the request has come from there then we need
+     * to not run this method.
+     *
+     * To that end, it bails if its a front-end request.
+     *
+     * @return Entry|bool
      */
     public function getControl(): Entry
     {
-        if ($this->control !== null) {
-            return $this->control;
+        if ($this->_control !== null) {
+            return $this->_control;
         }
 
         if (!$this->getDrafts()) {
             return false;
         }
 
-        $this->control = $this->getDrafts()[0]->getSource();
+        if (Craft::$app->getRequest()->getIsSiteRequest()) {
+            return false;
+        }
 
-        return $this->control;
+        $this->_control = $this->getDrafts()[0]->getSource();
+
+        return $this->_control;
     }
 
+    /**
+     * Returns the source ID of the first draft, which is the root entry or
+     * the "control" entry in the experiment.
+     *
+     * @return bool|int|null
+     */
+    public function getControlId()
+    {
+        if (!$this->getDrafts()) {
+            return false;
+        }
+
+        return (int) $this->getDrafts()[0]->getSourceId();
+    }
+
+
+    public function getCookieName()
+    {
+        if ($this->cookieName !== null){
+            return $this->cookieName;
+        }
+
+        if ($this->uid) {
+            $this->cookieName = $this::COOKIE_PREFIX.$this->uid;
+        } else {
+            $this->cookieName = $this::COOKIE_PREFIX.'unset';
+        }
+
+        return $this->cookieName;
+    }
 }

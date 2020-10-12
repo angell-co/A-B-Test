@@ -85,7 +85,7 @@ class Experiments extends Component
         $active = [];
 
         /** @var Experiment $experiment */
-        foreach ($this->_experiments() as $experiment) {
+        foreach ($this->getAllExperiments() as $experiment) {
 
             // No dates
             if (!$experiment->startDate && !$experiment->endDate) {
@@ -239,10 +239,17 @@ class Experiments extends Component
         return $this->_experiments;
     }
 
+    /**
+     * Returns an experiment as an array with drafts nested on it.
+     *
+     * @param Experiment $experiment
+     * @return array|bool
+     */
     private function _experimentWithDrafts(Experiment $experiment)
     {
-        if ($experiment->getDrafts()) {
-            return $experiment->toArray(['*'], ['drafts','control']);
+        // Need to call the getters so that they get expanded
+        if ($experiment->getDrafts() && $experiment->getCookieName()) {
+            return $experiment->toArray(['*'], ['drafts','controlId','cookieName']);
         }
 
         return false;

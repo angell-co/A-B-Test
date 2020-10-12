@@ -12,7 +12,9 @@ namespace angellco\abtest\services;
 
 use angellco\abtest\AbTest;
 use Craft;
+use craft\db\Table;
 use craft\elements\Entry;
+use craft\helpers\Db;
 use yii\base\Component;
 use yii\web\Cookie;
 
@@ -36,43 +38,102 @@ class Test extends Component
     // Public Methods
     // =========================================================================
 
+    /**
+     * Cookies the user for each active experiment.
+     *
+     * @throws \yii\base\InvalidConfigException
+     */
     public function cookie()
     {
-        if (!$this->getActiveExperiments()) {
+        if (!$this->_getActiveExperiments()) {
             return;
         }
 
-        $request = Craft::$app->getRequest();
-        $response = Craft::$app->getResponse();
-
         // Sort out the cookies - one for each experiment
-        foreach ($this->getActiveExperiments() as $activeExperiment) {
+        foreach ($this->_getActiveExperiments() as $activeExperiment) {
 
-            $cookieName = 'abtest_'.$activeExperiment['uid'];
-            $cookie = $request->getCookies()->get($cookieName);
+            $cookie = Craft::$app->getRequest()->getCookies()->get($activeExperiment['cookieName']);
 
             if (!$cookie) {
-                $cookie = new Cookie([
-                    'name' => $cookieName
-                ]);
 
                 // Decide which draft they should get or if they get the control
                 $total = count($activeExperiment['drafts']) + 1;
 
                 $r = rand(1, $total);
                 if ($r === 1) {
-                    $cookie->value = 'control';
+                    $cookieValue = 'control';
                 } else {
-                    $cookie->value = 'test_'.$activeExperiment['drafts'][$r-2]['uid'];
+                    $cookieValue = 'test:'.$activeExperiment['drafts'][$r-2]['uid'];
                 }
 
-                $response->getCookies()->add($cookie);
+                // Create the cookie and add it
+                $cookie = Craft::createObject(array_merge(Craft::cookieConfig(), [
+                    'class' => 'yii\web\Cookie',
+                    'name' => $activeExperiment['cookieName'],
+                    'value' => $cookieValue,
+                ]));
+
+                Craft::$app->getResponse()->getCookies()->add($cookie);
             }
         }
     }
 
+    /**
+     * Returns the altenative entry for this test based on the user’s cookie.
+     *
+     * @param Entry $entry
+     * @return bool|\craft\base\ElementInterface|null
+     */
+    public function getAlternateEntry(Entry $entry)
+    {
+        if (!$this->_getActiveExperiments()) {
+            return false;
+        }
 
-    public function getActiveExperiments()
+        // Find the applicable experiment for this entry
+        $applicableExperiment = null;
+        foreach ($this->_getActiveExperiments() as $activeExperiment) {
+            if ($activeExperiment['controlId'] === $entry->id) {
+                $applicableExperiment = $activeExperiment;
+                break;
+            }
+        }
+
+        // If there isn’t one, then bail
+        if (!$applicableExperiment) {
+            return false;
+        }
+
+        $cookie = Craft::$app->getRequest()->getCookies()->get($applicableExperiment['cookieName']);
+        if (!$cookie) {
+            $cookie = Craft::$app->getResponse()->getCookies()->get($applicableExperiment['cookieName']);
+        }
+
+        // If we still don’t have a cookie for whatever reason then default to showing the control by returning false
+        if (!$cookie) {
+            return false;
+        }
+
+        // We have a testable session, so check if its control and bail if so
+        if (strpos($cookie->value, 'test:') === false) {
+            return false;
+        }
+
+        // So, we now know we need to return the draft based on what is in the cookie
+        $cookieParts = explode(':', $cookie->value, 2);
+        $draftEntryUid = $cookieParts[1];
+        $entryId = Db::idByUid(Table::ELEMENTS, $draftEntryUid);
+        return Craft::$app->getElements()->getElementById($entryId, Entry::class);
+    }
+
+    // Private Methods
+    // =========================================================================
+
+    /**
+     * @see Experiments::getActiveExperiments()
+     * @return array|null
+     */
+    private function _getActiveExperiments()
     {
         if ($this->_activeExperiments !== null) {
             return $this->_activeExperiments;
@@ -81,62 +142,6 @@ class Test extends Component
         $this->_activeExperiments = AbTest::$plugin->getExperiments()->getActiveExperiments();
 
         return $this->_activeExperiments;
-    }
-
-    // At this point we should make sure we know which source entry IDs we’re bothered about running tests with
-    // So, probably get all active experiments, get the control off them and bail if this ID doesn’t match
-    // any of our controls - this should be very performant! Check caching in the active experiments route.
-    public function getAlternateEntry(Entry $entry)
-    {
-        if (!$this->getActiveExperiments()) {
-            return false;
-        }
-
-        // Find the applicable experiment for this entry
-        $applicableExperiment = null;
-        foreach ($this->getActiveExperiments() as $activeExperiment) {
-            if ($activeExperiment['control']['id'] === $entry->id) {
-                $applicableExperiment = $activeExperiment;
-                break;
-            }
-        }
-
-        // Control isn’t set, because getControl() hasn’t been called in Experiments::_experimentWithDrafts
-
-        // getControl() is only used in the CP edit view, so we should probably find another way to do that bit
-        // and ditch the method as otherwise if we force it to get set in Experiments::_experimentWithDrafts we end up
-        // in a loop as the ElementQuery::EVENT_AFTER_POPULATE_ELEMENT event handler gets called again ...
-        Craft::dd($this->getActiveExperiments()[0]['control']);
-
-        // If there isn’t one, then bail
-        if (!$applicableExperiment) {
-            return false;
-        }
-
-        Craft::dd($applicableExperiment);
-
-        $cookie = $request->getCookies()->get('abtest_1');
-//
-//                        if (!$cookie) {
-//                            $cookie = $response->getCookies()->get('abtest_1');
-//                        }
-//
-//                        if ($cookie && $cookie->value === 'test') {
-//                            // TODO: Get draft IDs - this is currently getting the latest draft available, not one in
-//                            // our test
-//                            $query = Entry::find()
-//                                ->draftOf($entry)
-//                                ->siteId($entry->siteId)
-//                                ->anyStatus()
-//                                ->orderBy(['dateUpdated' => SORT_DESC])
-//                                ->limit(1);
-//                            $draftIds = $query->ids();
-//                            if ($draftIds) {
-//                                $selectedEntry = Craft::$app->getElements()->getElementById($draftIds[0]);
-//                                $event->element = $selectedEntry;
-//                            }
-//                        }
-
     }
 
 }
