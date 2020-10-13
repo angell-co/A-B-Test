@@ -27,6 +27,8 @@ use craft\helpers\ConfigHelper;
 use craft\web\Application;
 use craft\web\UrlManager;
 use craft\web\View;
+use putyourlightson\blitz\events\ResponseEvent;
+use putyourlightson\blitz\services\CacheRequestService;
 use yii\base\Event;
 use yii\db\Exception as DbException;
 use yii\web\Cookie;
@@ -214,6 +216,20 @@ class AbTest extends Plugin
                 }
             }
         );
+
+
+//        Event::on(CacheRequestService::class, CacheRequestService::EVENT_BEFORE_GET_RESPONSE,
+//            function(ResponseEvent $event) use($test) {
+//                $test->cookie();
+////                Craft::dd($event);
+//            }
+//        );
+//
+//        Event::on(CacheRequestService::class, CacheRequestService::EVENT_AFTER_GET_RESPONSE,
+//            function(ResponseEvent $event) use($test) {
+////                Craft::dd($event);
+//            }
+//        );
 
     }
 
