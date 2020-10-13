@@ -45,6 +45,13 @@ class Test extends Component
      */
     public function cookie()
     {
+        $request = Craft::$app->getRequest();
+        $response = Craft::$app->getResponse();
+
+        if (!$response->getIsOk() || !$request->getIsSiteRequest()) {
+            return;
+        }
+
         if (!$this->_getActiveExperiments()) {
             return;
         }
@@ -52,7 +59,7 @@ class Test extends Component
         // Sort out the cookies - one for each experiment
         foreach ($this->_getActiveExperiments() as $activeExperiment) {
 
-            $cookie = Craft::$app->getRequest()->getCookies()->get($activeExperiment['cookieName']);
+            $cookie = $request->getCookies()->get($activeExperiment['cookieName']);
 
             if (!$cookie) {
 
@@ -73,7 +80,7 @@ class Test extends Component
                     'value' => $cookieValue,
                 ]));
 
-                Craft::$app->getResponse()->getCookies()->add($cookie);
+                $response->getCookies()->add($cookie);
             }
         }
     }

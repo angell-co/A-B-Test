@@ -105,6 +105,7 @@ class AbTest extends Plugin
         );
 
         // Entries sidebar
+        // TODO: refactor this out
         if ($request->getIsCpRequest() && !$request->getIsConsoleRequest()) {
             Craft::$app->getView()->hook('cp.entries.edit.details', function (&$context) {
                 $html = '';
@@ -189,10 +190,8 @@ class AbTest extends Plugin
         // Cookie the user for all active experiments
         $test = $this->getTest();
         Event::on(Application::class, Application::EVENT_INIT,
-            function() use($request, $response, $test) {
-                if ($response->getIsOk() && $request->getIsSiteRequest()) {
-                    $test->cookie();
-                }
+            function() use($test) {
+                $test->cookie();
             }
         );
 
@@ -206,7 +205,6 @@ class AbTest extends Plugin
 
                     // Dumb check if its a draft ID so we don’t get a loop due to this event handler firing again when
                     // we populate the draft lower down
-                    // TODO: refactor this check
                     if (!$entry->draftId) {
                         $alternateEntry = $test->getAlternateEntry($entry);
                         if ($alternateEntry) {
