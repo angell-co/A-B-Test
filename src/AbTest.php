@@ -150,7 +150,7 @@ class AbTest extends Plugin
                             ->draftOf($entry)
                             ->siteId($entry->siteId)
                             ->anyStatus()
-                            ->orderBy(['dateUpdated' => SORT_DESC])
+                            ->orderBy(['id' => SORT_ASC])
                             ->limit(null)
                             ->all();
 

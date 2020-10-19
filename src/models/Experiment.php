@@ -135,6 +135,7 @@ class Experiment extends Model
         $draftIds = ExperimentDraft::find()
             ->select('draftId')
             ->where(['experimentId' => $this->id])
+            ->orderBy(['draftId' => SORT_ASC])
             ->column();
 
         if (!$draftIds) {
