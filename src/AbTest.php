@@ -14,6 +14,7 @@ use angellco\abtest\base\PluginTrait;
 use angellco\abtest\records\ExperimentDraft;
 use angellco\abtest\services\Experiments;
 use angellco\abtest\services\Test;
+use angellco\abtest\variables\AbTestVariable;
 use Craft;
 use craft\base\Plugin;
 use craft\db\Query;
@@ -27,6 +28,7 @@ use craft\events\TemplateEvent;
 use craft\helpers\ConfigHelper;
 use craft\services\Elements;
 use craft\web\Application;
+use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
 use putyourlightson\blitz\Blitz;
@@ -100,7 +102,16 @@ class AbTest extends Plugin
         $request = Craft::$app->getRequest();
         $response = Craft::$app->getResponse();
 
-        // Register our CP routes
+        // Register the variable class
+        Event::on(CraftVariable::class, CraftVariable::EVENT_INIT,
+            function(Event $event) {
+                /** @var CraftVariable $variable */
+                $variable = $event->sender;
+                $variable->set('abtest', AbTestVariable::class);
+            }
+        );
+
+        // Register the CP routes
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
@@ -222,32 +233,6 @@ class AbTest extends Plugin
             }
         );
 
-        // Make drafts purge the Blitz cache if needed
-        Event::on(Elements::class, Elements::EVENT_AFTER_SAVE_ELEMENT,
-            /** @var ElementEvent $event */
-            function($event) use ($test) {
-                if ($event->element !== null && is_a($event->element, Entry::class)) {
-                    // Check if its part of an experiment
-                    if ($test->isDraftInExperiment($event->element)) {
-                        Blitz::$plugin->refreshCache->addElementIds(Entry::class, [$event->element->id]);
-                        Blitz::$plugin->refreshCache->refresh();
-                    }
-                }
-            }
-        );
-
-
-        // TODO: when saving an experiment/draft relationship make sure to add element IDs and refresh
-
-
-        // Do we need this one? Don’t think so.
-//        Event::on(GenerateCacheService::class, GenerateCacheService::EVENT_BEFORE_SAVE_CACHE,
-//            function(SaveCacheEvent $event) use($test) {
-//                Craft::dd($event);
-//            }
-//        );
-//
-
         // Need a new event so we can get in front of the get value method and return a modded uri
 //        Event::on(CacheRequestService::class, CacheRequestService::EVENT_BEFORE_GET_RESPONSE,
 //            function(ResponseEvent $event) use($test) {
@@ -264,6 +249,30 @@ class AbTest extends Plugin
 //            }
 //        );
 
+
+        // TODO: when saving an experiment/draft relationship make sure to add element IDs and refresh
+
+
+        // Make drafts purge the Blitz cache if needed
+        Event::on(Elements::class, Elements::EVENT_AFTER_SAVE_ELEMENT,
+            /** @var ElementEvent $event */
+            function($event) use ($test) {
+                if ($event->element !== null && is_a($event->element, Entry::class)) {
+                    // Check if its part of an experiment
+                    if ($test->isDraftInExperiment($event->element)) {
+                        Blitz::$plugin->refreshCache->addElementIds(Entry::class, [$event->element->id]);
+                        Blitz::$plugin->refreshCache->refresh();
+                    }
+                }
+            }
+        );
+
+        // Do we need this one? Don’t think so.
+//        Event::on(GenerateCacheService::class, GenerateCacheService::EVENT_BEFORE_SAVE_CACHE,
+//            function(SaveCacheEvent $event) use($test) {
+//                Craft::dd($event);
+//            }
+//        );
     }
 
     /**

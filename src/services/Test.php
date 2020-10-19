@@ -69,9 +69,11 @@ class Test extends Component
 
                 $r = rand(1, $total);
                 if ($r === 1) {
-                    $cookieValue = 'control';
+                    $cookieValue = 'control:0';
                 } else {
-                    $cookieValue = 'test:'.$activeExperiment['drafts'][$r-2]['uid'];
+                    $draftIndex = $r-2;
+                    $optimizeIndex = $draftIndex+1;
+                    $cookieValue = 'test:'.$activeExperiment['drafts'][$draftIndex]['uid'].':'.$optimizeIndex;
                 }
 
                 // Create the cookie and add it
@@ -125,7 +127,7 @@ class Test extends Component
         }
 
         // So, we now know we need to return the draft based on what is in the cookie
-        $cookieParts = explode(':', $cookie->value, 2);
+        $cookieParts = explode(':', $cookie->value);
         $draftEntryUid = $cookieParts[1];
         $entryId = Db::idByUid(Table::ELEMENTS, $draftEntryUid);
         return Craft::$app->getElements()->getElementById($entryId, Entry::class);
