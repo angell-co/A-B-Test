@@ -11,6 +11,7 @@
 namespace angellco\abtest\services;
 
 use angellco\abtest\AbTest;
+use angellco\abtest\records\ExperimentDraft;
 use Craft;
 use craft\db\Table;
 use craft\elements\Entry;
@@ -59,7 +60,7 @@ class Test extends Component
         // Sort out the cookies - one for each experiment
         foreach ($this->_getActiveExperiments() as $activeExperiment) {
 
-            $cookie = $request->getCookies()->get($activeExperiment['cookieName']);
+            $cookie = $this->_getCookie($activeExperiment['cookieName']);
 
             if (!$cookie) {
 
@@ -111,10 +112,7 @@ class Test extends Component
             return false;
         }
 
-        $cookie = Craft::$app->getRequest()->getCookies()->get($applicableExperiment['cookieName']);
-        if (!$cookie) {
-            $cookie = Craft::$app->getResponse()->getCookies()->get($applicableExperiment['cookieName']);
-        }
+        $cookie = $this->_getCookie($applicableExperiment['cookieName']);
 
         // If we still don’t have a cookie for whatever reason then default to showing the control by returning false
         if (!$cookie) {
@@ -133,6 +131,67 @@ class Test extends Component
         return Craft::$app->getElements()->getElementById($entryId, Entry::class);
     }
 
+    /**
+     * Returns all the cookies that are currently actively in use.
+     *
+     * @return array|bool
+     */
+    public function getActiveCookies()
+    {
+        if (!$this->_getActiveExperiments()) {
+            return false;
+        }
+
+        $cookies = [];
+        foreach ($this->_getActiveExperiments() as $activeExperiment) {
+            $cookies[] = $this->_getCookie($activeExperiment['cookieName']);
+        }
+
+        return $cookies;
+    }
+
+    /**
+     * Returns all the active cookies as a hash of their name / value combinations.
+     *
+     * @return bool|string
+     */
+    public function getActiveCookiesAsHash()
+    {
+        $cookies = $this->getActiveCookies();
+
+        if (!$cookies) {
+            return false;
+        }
+
+        $arrayToHash = [];
+        foreach ($cookies as $cookie) {
+            $arrayToHash[] = $cookie->name . '_' . $cookie->value;
+        }
+
+        array_multisort($arrayToHash);
+
+        return md5(json_encode($arrayToHash));
+    }
+
+    /**
+     * Returns true if the Entry is a Draft and in an experiment.
+     *
+     * @param Entry $entry
+     * @return bool
+     */
+    public function isDraftInExperiment(Entry $entry)
+    {
+        if(!$entry->getIsDraft()) {
+            return false;
+        }
+
+        if (!ExperimentDraft::findOne(['draftId' => $entry->draftId])) {
+            return false;
+        }
+
+        return true;
+    }
+
     // Private Methods
     // =========================================================================
 
@@ -149,6 +208,23 @@ class Test extends Component
         $this->_activeExperiments = AbTest::$plugin->getExperiments()->getActiveExperiments();
 
         return $this->_activeExperiments;
+    }
+
+    /**
+     * Gets a cookie from the request or failing that the response to catch those that have just been set.
+     *
+     * @param $name
+     * @return Cookie|null
+     */
+    private function _getCookie($name)
+    {
+        $cookie = Craft::$app->getRequest()->getCookies()->get($name);
+
+        if (!$cookie) {
+            $cookie = Craft::$app->getResponse()->getCookies()->get($name);
+        }
+
+        return $cookie;
     }
 
 }

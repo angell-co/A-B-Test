@@ -20,15 +20,20 @@ use craft\db\Query;
 use craft\db\Table;
 use craft\elements\db\ElementQuery;
 use craft\elements\Entry;
+use craft\events\ElementEvent;
 use craft\events\PopulateElementEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\TemplateEvent;
 use craft\helpers\ConfigHelper;
+use craft\services\Elements;
 use craft\web\Application;
 use craft\web\UrlManager;
 use craft\web\View;
+use putyourlightson\blitz\Blitz;
 use putyourlightson\blitz\events\ResponseEvent;
+use putyourlightson\blitz\events\SaveCacheEvent;
 use putyourlightson\blitz\services\CacheRequestService;
+use putyourlightson\blitz\services\GenerateCacheService;
 use yii\base\Event;
 use yii\db\Exception as DbException;
 use yii\web\Cookie;
@@ -217,17 +222,45 @@ class AbTest extends Plugin
             }
         );
 
+        // Make drafts purge the Blitz cache if needed
+        Event::on(Elements::class, Elements::EVENT_AFTER_SAVE_ELEMENT,
+            /** @var ElementEvent $event */
+            function($event) use ($test) {
+                if ($event->element !== null && is_a($event->element, Entry::class)) {
+                    // Check if its part of an experiment
+                    if ($test->isDraftInExperiment($event->element)) {
+                        Blitz::$plugin->refreshCache->addElementIds(Entry::class, [$event->element->id]);
+                        Blitz::$plugin->refreshCache->refresh();
+                    }
+                }
+            }
+        );
 
-//        Event::on(CacheRequestService::class, CacheRequestService::EVENT_BEFORE_GET_RESPONSE,
-//            function(ResponseEvent $event) use($test) {
-//                $test->cookie();
-////                Craft::dd($event);
+
+        // TODO: when saving an experiment/draft relationship make sure to add element IDs and refresh
+
+
+        // Do we need this one? Don’t think so.
+//        Event::on(GenerateCacheService::class, GenerateCacheService::EVENT_BEFORE_SAVE_CACHE,
+//            function(SaveCacheEvent $event) use($test) {
+//                Craft::dd($event);
 //            }
 //        );
 //
-//        Event::on(CacheRequestService::class, CacheRequestService::EVENT_AFTER_GET_RESPONSE,
+
+        // Need a new event so we can get in front of the get value method and return a modded uri
+//        Event::on(CacheRequestService::class, CacheRequestService::EVENT_BEFORE_GET_RESPONSE,
 //            function(ResponseEvent $event) use($test) {
-////                Craft::dd($event);
+//                $test->cookie();
+//                $cookieHash = $test->getActiveCookiesAsHash();
+//                if ($cookieHash) {
+//                    // Check if it already contains a query or not
+//                    if (Craft::$app->getRequest()->getQueryStringWithoutPath()) {
+//                        $siteUri->uri .= '&abtest=' . $cookieHash;
+//                    } else {
+//                        $siteUri->uri .= '?abtest=' . $cookieHash;
+//                    }
+//                }
 //            }
 //        );
 
