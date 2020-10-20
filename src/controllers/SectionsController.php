@@ -64,7 +64,7 @@ class SectionsController extends Controller
             ]);
         }
 
-        // If we got this far, we have drafts
+        // If we got this far, we have drafts and can save the section
         if (AbTest::$plugin->getSections()->saveSection($section)) {
             return $this->asJson([
                 'success' => true,
@@ -74,22 +74,4 @@ class SectionsController extends Controller
 
         return $this->asErrorJson('Couldn’t save section.');
     }
-
-    /**
-     * Deletes a draft / experiment relation.
-     *
-     * @return Response
-     * @throws \yii\web\BadRequestHttpException
-     */
-//    public function actionDelete(): Response
-//    {
-//        $this->requirePostRequest();
-//        $this->requireAcceptsJson();
-//
-//        $draftId = $this->request->getRequiredBodyParam('id');
-//
-//        ExperimentDraft::deleteAll(['draftId' => $draftId]);
-//
-//        return $this->asJson(['success' => true]);
-//    }
 }
