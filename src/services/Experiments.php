@@ -187,9 +187,6 @@ class Experiments extends Component
 
         $transaction = Craft::$app->getDb()->beginTransaction();
         try {
-
-            // TODO: delete the relations
-
             // Delete the experiment
             Craft::$app->getDb()->createCommand()
                 ->delete(Table::EXPERIMENTS, ['id' => $experiment->id])

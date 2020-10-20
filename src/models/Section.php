@@ -11,6 +11,7 @@
 namespace angellco\abtest\models;
 
 use angellco\abtest\records\ExperimentDraft;
+use angellco\abtest\records\SectionDraft;
 use Craft;
 use craft\base\Model;
 use craft\elements\Entry;
@@ -32,9 +33,29 @@ class Section extends Model
     // =========================================================================
 
     /**
-     * @var Entry[]|null Array of draft entries
+     * @var int|null ID
      */
-    public $drafts;
+    public $id;
+
+    /**
+     * @var int|null Experiment ID
+     */
+    public $experimentId;
+
+    /**
+     * @var int|null Source ID
+     */
+    public $sourceId;
+
+    /**
+     * @var Entry[] Array of draft entries
+     */
+    public $drafts = [];
+
+    /**
+     * @var array Array of draft IDs
+     */
+    public $draftIds = [];
 
     // Private Properties
     // =========================================================================
@@ -52,7 +73,12 @@ class Section extends Model
      */
     public function extraFields()
     {
-        return ['drafts','controlId'];
+        return [
+            'drafts'  => function () {
+                return $this->getDrafts();
+            },
+            'controlId'
+        ];
     }
 
     /**
@@ -62,7 +88,7 @@ class Section extends Model
      */
     public function getDrafts(): array
     {
-        if ($this->drafts !== null) {
+        if (!empty($this->drafts)) {
             return $this->drafts;
         }
 
@@ -76,7 +102,6 @@ class Section extends Model
             return [];
         }
 
-        $this->drafts = [];
         foreach ($draftIds as $draftId) {
             $this->drafts[] = Entry::find()
                 ->draftId($draftId)

@@ -10,8 +10,9 @@
 
 namespace angellco\abtest\base;
 
-use angellco\abtest\services\Experiments;
 use angellco\abtest\AbTest;
+use angellco\abtest\services\Experiments;
+use angellco\abtest\services\Sections;
 use angellco\abtest\services\Test;
 
 /**
@@ -44,6 +45,14 @@ trait PluginTrait
     }
 
     /**
+     * @return Sections
+     */
+    public function getSections(): Sections
+    {
+        return $this->get('sections');
+    }
+
+    /**
      * @return Test
      */
     public function getTest(): Test
@@ -58,6 +67,7 @@ trait PluginTrait
     {
         $this->setComponents([
             'experiments' => Experiments::class,
+            'sections' => Sections::class,
             'test' => Test::class,
         ]);
     }

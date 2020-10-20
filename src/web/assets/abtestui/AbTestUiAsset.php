@@ -26,12 +26,12 @@ class AbTestUiAsset extends AssetBundle
     /**
      * @var bool
      */
-    private $useDevServer = false;
+    private $useDevServer = true;
 
     /**
      * @var bool
      */
-    private $devServerBaseUrl = 'https://localhost:8081/';
+    private $devServerBaseUrl = 'https://localhost:8080/';
 
     /**
      * @inheritdoc

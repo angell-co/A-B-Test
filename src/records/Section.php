@@ -16,15 +16,15 @@ use yii\db\ActiveQueryInterface;
 
 /**
  * @property int $id ID
- * @property int $experimentId
- * @property int $sourceId
+ * @property int $experimentId Experiment ID
+ * @property int $sourceId Source ID
  * @property ActiveQueryInterface $sectionDrafts
  *
  * @author    Angell & Co
  * @package   AbTest
  * @since     1.0.0
  */
-class Experiment extends ActiveRecord
+class Section extends ActiveRecord
 {
     // Public Static Methods
     // =========================================================================
@@ -34,7 +34,7 @@ class Experiment extends ActiveRecord
      */
     public static function tableName()
     {
-        return Table::EXPERIMENTS;
+        return Table::SECTIONS;
     }
 
     /**

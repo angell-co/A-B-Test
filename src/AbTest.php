@@ -11,6 +11,7 @@
 namespace angellco\abtest;
 
 use angellco\abtest\base\PluginTrait;
+use angellco\abtest\models\Section;
 use angellco\abtest\records\SectionDraft;
 use angellco\abtest\services\Experiments;
 use angellco\abtest\services\Test;
@@ -136,6 +137,7 @@ class AbTest extends Plugin
                     $draftData = [];
                     $expDrafts = [];
                     $experiments = $this->getExperiments()->getAllExperiments();
+                    $section = null;
 
                     if ($experiments) {
                         foreach ($experiments as $experiment) {
@@ -146,6 +148,7 @@ class AbTest extends Plugin
                             ];
                         }
 
+                        // Drafts
                         $drafts = Entry::find()
                             ->draftOf($entry)
                             ->siteId($entry->siteId)
@@ -166,37 +169,44 @@ class AbTest extends Plugin
                                 ];
                             }
 
-                            // Now we have the draft data we can get the relations records that already exist
-                            // for those drafts, if there are any
-                            $draftIds = array_column($draftData, 'draftId');
-                            $expDraftRecords = SectionDraft::find()
-                                ->where(['draftId' => $draftIds])
-                                ->all();
-
-                            if ($expDraftRecords) {
-                                // Format them
-                                foreach ($expDraftRecords as $expDraftRecord) {
-                                    $expDrafts[] = [
-                                        'id' => $expDraftRecord['id'],
-                                        'experimentId' => $expDraftRecord['experimentId'],
-                                        'draftId' => $expDraftRecord['draftId']
-                                    ];
-                                }
-
-                                // Go through and select the experiment these drafts are related to
-                                foreach ($experimentOptions as &$experimentOption) {
-                                    if ($experimentOption['value'] === $expDrafts[0]['experimentId']) {
-                                        $experimentOption['checked'] = true;
-                                    }
-                                }
-                            }
+//                            // Now we have the draft data we can get the relations records that already exist
+//                            // for those drafts, if there are any
+//                            $draftIds = array_column($draftData, 'draftId');
+//                            $sectionDraftRecords = SectionDraft::find()
+//                                ->where(['draftId' => $draftIds])
+//                                ->all();
+//
+//                            if ($sectionDraftRecords) {
+//                                // Format them
+//                                foreach ($sectionDraftRecords as $sectionDraftRecord) {
+//                                    $expDrafts[] = [
+//                                        'id' => $expDraftRecord['id'],
+//                                        'experimentId' => $expDraftRecord['experimentId'],
+//                                        'draftId' => $expDraftRecord['draftId']
+//                                    ];
+//                                }
+//
+//                                // Go through and select the experiment these drafts are related to
+//                                foreach ($experimentOptions as &$experimentOption) {
+//                                    if ($experimentOption['value'] === $expDrafts[0]['experimentId']) {
+//                                        $experimentOption['checked'] = true;
+//                                    }
+//                                }
+//                            }
                         }
+
+                        // Existing section
+                        $section = $this->getSections()->getSectionBySourceId($entry->id);
+                    }
+
+                    if (!$section) {
+                        $section = new Section(['sourceId' => $entry->id]);
                     }
 
                     $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
                         'experimentOptions' => $experimentOptions,
                         'drafts' => $draftData,
-                        'experimentDrafts' => $expDrafts
+                        'section' => $section->toArray(['*'], ['drafts'])
                     ]);
 
                 }

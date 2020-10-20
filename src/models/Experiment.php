@@ -54,7 +54,7 @@ class Experiment extends Model
     public $endDate;
 
     /**
-     * @var int|null Field layout ID
+     * @var int|null UID
      */
     public $uid;
 

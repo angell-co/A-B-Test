@@ -51,55 +51,56 @@
     }) }}
 
     <hr>
-    <h3>Attached Drafts</h3>
-    <div id="abtest-experiment-drafts-vue-admin-table"></div>
+    <h3>Sections</h3>
+    <p class="error">TODO</p>
+{#    <div id="abtest-experiment-drafts-vue-admin-table"></div>#}
 
 {% endblock %}
 
-{% set tableData = [] %}
-{% if experiment.getDrafts() %}
+{#{% set tableData = [] %}#}
+{#{% if experiment.getDrafts() %}#}
 
-    {% set tableData = [{
-        id: '__control__',
-        title: experiment.getControl().title,
-        url: experiment.getControl().cpEditUrl,
-        control: true,
-        _showDelete: false
-    }] %}
+{#    {% set tableData = [{#}
+{#        id: '__control__',#}
+{#        title: experiment.getControl().title,#}
+{#        url: experiment.getControl().cpEditUrl,#}
+{#        control: true,#}
+{#        _showDelete: false#}
+{#    }] %}#}
 
-    {% for draft in experiment.getDrafts() %}
-        {% set tableData = tableData|merge([{
-            id: draft.draftId,
-            title: draft.title,
-            url: draft.cpEditUrl~'?draftId='~draft.draftId,
-            control: false,
-            _showDelete: true
-        }]) %}
-    {% endfor %}
+{#    {% for draft in experiment.getDrafts() %}#}
+{#        {% set tableData = tableData|merge([{#}
+{#            id: draft.draftId,#}
+{#            title: draft.title,#}
+{#            url: draft.cpEditUrl~'?draftId='~draft.draftId,#}
+{#            control: false,#}
+{#            _showDelete: true#}
+{#        }]) %}#}
+{#    {% endfor %}#}
 
-{% endif %}
+{#{% endif %}#}
 
-{% js %}
-    var columns = [
-        {
-            name: '__slot:title',
-            title: Craft.t('app', 'Name'),
-        },
-        {
-            name: 'control',
-            title: Craft.t('ab-test', 'Control'),
-            callback: function(value) {
-                return value ? '<span data-icon="check" title="Yes"></span>' : '';
-            }
-        }
-    ];
+{#{% js %}#}
+{#    var columns = [#}
+{#        {#}
+{#            name: '__slot:title',#}
+{#            title: Craft.t('app', 'Name'),#}
+{#        },#}
+{#        {#}
+{#            name: 'control',#}
+{#            title: Craft.t('ab-test', 'Control'),#}
+{#            callback: function(value) {#}
+{#                return value ? '<span data-icon="check" title="Yes"></span>' : '';#}
+{#            }#}
+{#        }#}
+{#    ];#}
 
-    new Craft.VueAdminTable({
-        columns: columns,
-        container: '#abtest-experiment-drafts-vue-admin-table',
-        deleteAction: 'ab-test/experiment-drafts/delete',
-        emptyMessage: Craft.t('ab-test', 'No drafts have been added yet.'),
-        tableData: {{ tableData|json_encode|raw }},
-        padded: true
-    });
-{% endjs %}
+{#    new Craft.VueAdminTable({#}
+{#        columns: columns,#}
+{#        container: '#abtest-experiment-drafts-vue-admin-table',#}
+{#        deleteAction: 'ab-test/experiment-drafts/delete',#}
+{#        emptyMessage: Craft.t('ab-test', 'No drafts have been added yet.'),#}
+{#        tableData: {{ tableData|json_encode|raw }},#}
+{#        padded: true#}
+{#    });#}
+{#{% endjs %}#}

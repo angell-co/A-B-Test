@@ -23,7 +23,8 @@ return [
     'Start Date' => 'Start Date',
     'End Date' => 'End Date',
     'No experiment exists with the ID “{id}”' => 'No experiment exists with the ID “{id}”',
+    'No section exists with the ID “{id}”' => 'No section exists with the ID “{id}”',
     'Experiment saved.' => 'Experiment saved.',
     'Couldn’t save experiment.' => 'Couldn’t save experiment.',
-    'No. of items' => 'No. of items'
+    'No. of variants' => 'No. of variants'
 ];
