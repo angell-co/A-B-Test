@@ -50,56 +50,50 @@
         errors: experiment.getErrors('endDate'),
     }) }}
 
-    <hr>
-    <h3>Attached Drafts</h3>
-    <div id="abtest-experiment-drafts-vue-admin-table"></div>
+    {% set sections = experiment.getSections() %}
+    {% if sections %}
+        <hr>
 
+        <p>Below are the entries that form part of your experiment, if you see more than one then you are running a multivariate test rather than an A/B test.</p>
+
+        {% for section in sections %}
+            <div class="pane">
+                {% set control = section.getControl() %}
+
+                <header class="header">
+                    <h3>
+                        {{ control.section.name }}
+                        <span class="icon" data-icon="rarr"></span>
+                        <a href="{{ control.cpEditUrl }}">{{ control.title }}</a>
+                    </h3>
+                </header>
+
+                <div class="content-pane">
+                    <div id="abtest-experiment-drafts-vue-admin-table-{{ section.id }}"></div>
+                </div>
+
+                {% js %}
+                    var columns = [
+                        {
+                            name: '__slot:title',
+                            title: Craft.t('app', 'Draft Name'),
+                        },
+                        {
+                            name: 'notes',
+                            title: Craft.t('app', 'Notes'),
+                        }
+                    ];
+
+                    new Craft.VueAdminTable({
+                        columns: columns,
+                        container: '#abtest-experiment-drafts-vue-admin-table-{{ section.id }}',
+                        deleteAction: 'ab-test/experiment-drafts/delete',
+                        emptyMessage: Craft.t('ab-test', 'No drafts have been added yet.'),
+                        tableData: {{ draftsTableData[section.id]|json_encode|raw }},
+                    });
+                {% endjs %}
+            </div>
+        {% endfor %}
+    {% endif %}
 {% endblock %}
 
-{% set tableData = [] %}
-{% if experiment.getDrafts() %}
-
-    {% set tableData = [{
-        id: '__control__',
-        title: experiment.getControl().title,
-        url: experiment.getControl().cpEditUrl,
-        control: true,
-        _showDelete: false
-    }] %}
-
-    {% for draft in experiment.getDrafts() %}
-        {% set tableData = tableData|merge([{
-            id: draft.draftId,
-            title: draft.title,
-            url: draft.cpEditUrl~'?draftId='~draft.draftId,
-            control: false,
-            _showDelete: true
-        }]) %}
-    {% endfor %}
-
-{% endif %}
-
-{% js %}
-    var columns = [
-        {
-            name: '__slot:title',
-            title: Craft.t('app', 'Name'),
-        },
-        {
-            name: 'control',
-            title: Craft.t('ab-test', 'Control'),
-            callback: function(value) {
-                return value ? '<span data-icon="check" title="Yes"></span>' : '';
-            }
-        }
-    ];
-
-    new Craft.VueAdminTable({
-        columns: columns,
-        container: '#abtest-experiment-drafts-vue-admin-table',
-        deleteAction: 'ab-test/experiment-drafts/delete',
-        emptyMessage: Craft.t('ab-test', 'No drafts have been added yet.'),
-        tableData: {{ tableData|json_encode|raw }},
-        padded: true
-    });
-{% endjs %}

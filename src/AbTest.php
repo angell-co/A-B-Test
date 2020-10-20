@@ -11,7 +11,8 @@
 namespace angellco\abtest;
 
 use angellco\abtest\base\PluginTrait;
-use angellco\abtest\records\ExperimentDraft;
+use angellco\abtest\models\Section;
+use angellco\abtest\records\SectionDraft;
 use angellco\abtest\services\Experiments;
 use angellco\abtest\services\Test;
 use angellco\abtest\variables\AbTestVariable;
@@ -136,6 +137,7 @@ class AbTest extends Plugin
                     $draftData = [];
                     $expDrafts = [];
                     $experiments = $this->getExperiments()->getAllExperiments();
+                    $section = null;
 
                     if ($experiments) {
                         foreach ($experiments as $experiment) {
@@ -146,6 +148,7 @@ class AbTest extends Plugin
                             ];
                         }
 
+                        // Drafts
                         $drafts = Entry::find()
                             ->draftOf($entry)
                             ->siteId($entry->siteId)
@@ -155,7 +158,6 @@ class AbTest extends Plugin
                             ->all();
 
                         if ($drafts) {
-
                             $draftData = [];
                             foreach ($drafts as $draft) {
                                 $draftData[] = [
@@ -165,38 +167,20 @@ class AbTest extends Plugin
                                     'note' => $draft->draftNotes,
                                 ];
                             }
-
-                            // Now we have the draft data we can get the relations records that already exist
-                            // for those drafts, if there are any
-                            $draftIds = array_column($draftData, 'draftId');
-                            $expDraftRecords = ExperimentDraft::find()
-                                ->where(['draftId' => $draftIds])
-                                ->all();
-
-                            if ($expDraftRecords) {
-                                // Format them
-                                foreach ($expDraftRecords as $expDraftRecord) {
-                                    $expDrafts[] = [
-                                        'id' => $expDraftRecord['id'],
-                                        'experimentId' => $expDraftRecord['experimentId'],
-                                        'draftId' => $expDraftRecord['draftId']
-                                    ];
-                                }
-
-                                // Go through and select the experiment these drafts are related to
-                                foreach ($experimentOptions as &$experimentOption) {
-                                    if ($experimentOption['value'] === $expDrafts[0]['experimentId']) {
-                                        $experimentOption['checked'] = true;
-                                    }
-                                }
-                            }
                         }
+
+                        // Existing section
+                        $section = $this->getSections()->getSectionBySourceId($entry->id);
+                    }
+
+                    if (!$section) {
+                        $section = new Section(['sourceId' => $entry->id]);
                     }
 
                     $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
                         'experimentOptions' => $experimentOptions,
                         'drafts' => $draftData,
-                        'experimentDrafts' => $expDrafts
+                        'section' => $section->toArray(['*'], ['drafts'])
                     ]);
 
                 }
@@ -254,18 +238,18 @@ class AbTest extends Plugin
 
 
         // Make drafts purge the Blitz cache if needed
-        Event::on(Elements::class, Elements::EVENT_AFTER_SAVE_ELEMENT,
-            /** @var ElementEvent $event */
-            function($event) use ($test) {
-                if ($event->element !== null && is_a($event->element, Entry::class)) {
-                    // Check if its part of an experiment
-                    if ($test->isDraftInExperiment($event->element)) {
-                        Blitz::$plugin->refreshCache->addElementIds(Entry::class, [$event->element->id]);
-                        Blitz::$plugin->refreshCache->refresh();
-                    }
-                }
-            }
-        );
+//        Event::on(Elements::class, Elements::EVENT_AFTER_SAVE_ELEMENT,
+//            /** @var ElementEvent $event */
+//            function($event) use ($test) {
+//                if ($event->element !== null && is_a($event->element, Entry::class)) {
+//                    // Check if its part of an experiment
+//                    if ($test->isDraftInExperiment($event->element)) {
+//                        Blitz::$plugin->refreshCache->addElementIds(Entry::class, [$event->element->id]);
+//                        Blitz::$plugin->refreshCache->refresh();
+//                    }
+//                }
+//            }
+//        );
 
         // Do we need this one? Don’t think so.
 //        Event::on(GenerateCacheService::class, GenerateCacheService::EVENT_BEFORE_SAVE_CACHE,

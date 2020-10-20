@@ -27,7 +27,11 @@
 
             <div class="footer">
                 <div class="spinner" v-if="loading"></div>
-                <button class="btn submit" @click.prevent="actionUpdate">Update</button>
+
+                <div class="buttons right">
+                    <a :href="experimentEditUrl" class="btn" v-if="section.id">View</a>
+                    <button class="btn submit" @click.prevent="actionUpdate">Update</button>
+                </div>
             </div>
         </template>
     </div>
@@ -39,10 +43,6 @@
     import _map from 'lodash/map';
 
     export default {
-        components: {
-
-        },
-
         props: {
             experimentOptions: {
                 type: Array,
@@ -52,9 +52,9 @@
                 type: Array,
                 default: () => { return [] },
             },
-            experimentDrafts: {
-                type: Array,
-                default: () => { return [] },
+            section: {
+                type: Object,
+                default: () => { return {} },
             }
         },
 
@@ -75,13 +75,9 @@
 
             return {
                 experimentId: experimentId,
-                draftIds: this.experimentDrafts.length >= 1 ? _map(this.experimentDrafts, 'draftId') : [],
+                draftIds: this.section.drafts.length >= 1 ? _map(this.section.drafts, 'draftId') : [],
                 loading: false
             }
-        },
-
-        mounted() {
-
         },
 
         methods: {
@@ -92,10 +88,11 @@
 
                 this.loading = true;
 
-                axios.post(Craft.getActionUrl('ab-test/experiment-drafts/save'), {
+                axios.post(Craft.getActionUrl('ab-test/sections/save'), {
+                    sectionId: this.section.id,
+                    sourceId: this.section.sourceId,
                     experimentId: this.experimentId,
                     draftIds: this.draftIds,
-                    allDraftIds: _map(this.drafts, 'draftId')
                 }, {
                     headers: {
                         'X-CSRF-Token':  Craft.csrfTokenValue,
@@ -103,7 +100,15 @@
                 })
                     .then( (response) => {
                         this.loading = false;
-                        console.log(response);
+                        if (response.data.section) {
+                            this.section = response.data.section;
+                        } else {
+                            this.section = {
+                                'id' : null,
+                                'sourceId' : this.section.sourceId,
+                                'drafts' : []
+                            };
+                        }
                     })
                     .catch( (error) => {
                         this.loading = false;
@@ -116,6 +121,12 @@
         computed: {
             hasExperiments () {
                 return this.experimentOptions.length >= 1;
+            },
+            experimentEditUrl () {
+                if (!this.experimentId) {
+                    return null;
+                }
+                return Craft.getCpUrl('ab-test/experiments/'+this.experimentId);
             }
         }
     }
@@ -159,7 +170,6 @@
         .footer {
             margin: 0 -24px;
         }
-
 
         .header + .draft-field {
             border-top: 0;

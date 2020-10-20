@@ -35,6 +35,6 @@ Craft.AbTest.EntrySidebar = Garnish.Base.extend({
     defaults: {
         experimentOptions: [],
         drafts: [],
-        experimentDrafts: []
+        section: {}
     }
 });

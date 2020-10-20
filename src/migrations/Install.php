@@ -84,15 +84,32 @@ class Install extends Migration
             );
         }
 
-        // Experiments_Drafts table
-        $tableSchema = Craft::$app->db->schema->getTableSchema(Table::EXPERIMENTS_DRAFTS);
+        // Sections table
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Table::SECTIONS);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                Table::EXPERIMENTS_DRAFTS,
+                Table::SECTIONS,
                 [
                     'id' => $this->primaryKey(),
                     'experimentId' => $this->integer()->notNull(),
+                    'sourceId' => $this->integer()->notNull(),
+                    'dateCreated' => $this->dateTime()->notNull(),
+                    'dateUpdated' => $this->dateTime()->notNull(),
+                    'uid' => $this->uid(),
+                ]
+            );
+        }
+
+        // Section_Drafts table
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Table::SECTION_DRAFTS);
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                Table::SECTION_DRAFTS,
+                [
+                    'id' => $this->primaryKey(),
+                    'sectionId' => $this->integer()->notNull(),
                     'draftId' => $this->integer()->notNull(),
                     'dateCreated' => $this->dateTime()->notNull(),
                     'dateUpdated' => $this->dateTime()->notNull(),
@@ -111,7 +128,8 @@ class Install extends Migration
      */
     protected function createIndexes()
     {
-        $this->createIndex(null, Table::EXPERIMENTS_DRAFTS, ['experimentId', 'draftId'], true);
+        $this->createIndex(null, Table::SECTIONS, ['experimentId', 'sourceId'], true);
+        $this->createIndex(null, Table::SECTION_DRAFTS, ['sectionId', 'draftId'], true);
     }
 
     /**
@@ -121,8 +139,10 @@ class Install extends Migration
      */
     protected function addForeignKeys()
     {
-        $this->addForeignKey(null, Table::EXPERIMENTS_DRAFTS, ['experimentId'], Table::EXPERIMENTS, ['id'], 'CASCADE', 'CASCADE');
-        $this->addForeignKey(null, Table::EXPERIMENTS_DRAFTS, ['draftId'], \craft\db\Table::DRAFTS, ['id'], 'CASCADE', 'CASCADE');
+        $this->addForeignKey(null, Table::SECTIONS, ['experimentId'], Table::EXPERIMENTS, ['id'], 'CASCADE', 'CASCADE');
+        $this->addForeignKey(null, Table::SECTIONS, ['sourceId'], \craft\db\Table::ELEMENTS, ['id'], 'CASCADE', 'CASCADE');
+        $this->addForeignKey(null, Table::SECTION_DRAFTS, ['sectionId'], Table::SECTIONS, ['id'], 'CASCADE', 'CASCADE');
+        $this->addForeignKey(null, Table::SECTION_DRAFTS, ['draftId'], \craft\db\Table::DRAFTS, ['id'], 'CASCADE', 'CASCADE');
     }
 
     /**
@@ -132,9 +152,11 @@ class Install extends Migration
      */
     protected function dropForeignKeys()
     {
-        if (Craft::$app->db->schema->getTableSchema(Table::EXPERIMENTS_DRAFTS)) {
-            MigrationHelper::dropAllForeignKeysToTable(Table::EXPERIMENTS_DRAFTS, $this);
-            MigrationHelper::dropAllForeignKeysOnTable(Table::EXPERIMENTS_DRAFTS, $this);
+        if (Craft::$app->db->schema->getTableSchema(Table::SECTIONS)) {
+            MigrationHelper::dropAllForeignKeysToTable(Table::SECTIONS, $this);
+        }
+        if (Craft::$app->db->schema->getTableSchema(Table::SECTION_DRAFTS)) {
+            MigrationHelper::dropAllForeignKeysToTable(Table::SECTION_DRAFTS, $this);
         }
     }
 
@@ -145,7 +167,8 @@ class Install extends Migration
      */
     protected function dropTables()
     {
-        $this->dropTableIfExists(Table::EXPERIMENTS_DRAFTS);
+        $this->dropTableIfExists(Table::SECTION_DRAFTS);
+        $this->dropTableIfExists(Table::SECTIONS);
         $this->dropTableIfExists(Table::EXPERIMENTS);
     }
 

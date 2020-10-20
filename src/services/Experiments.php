@@ -81,7 +81,7 @@ class Experiments extends Component
     {
         $currentTime = DateTimeHelper::currentTimeStamp();
 
-        // TODO: cache this?
+        // TODO: memoize this?
         $active = [];
 
         /** @var Experiment $experiment */
@@ -89,7 +89,7 @@ class Experiments extends Component
 
             // No dates
             if (!$experiment->startDate && !$experiment->endDate) {
-                if ($exp = $this->_experimentWithDrafts($experiment)) {
+                if ($exp = $this->_experimentWithSections($experiment)) {
                     $active[] = $exp;
                 }
                 continue;
@@ -99,7 +99,7 @@ class Experiments extends Component
             if ($experiment->startDate && $experiment->endDate) {
 
                 if ($currentTime >= $experiment->startDate->format('U') && $currentTime <= $experiment->endDate->format('U')) {
-                    if ($exp = $this->_experimentWithDrafts($experiment)) {
+                    if ($exp = $this->_experimentWithSections($experiment)) {
                         $active[] = $exp;
                     }
                     continue;
@@ -109,7 +109,7 @@ class Experiments extends Component
 
             // End date
             if ($experiment->endDate && $currentTime <= $experiment->endDate->format('U')) {
-                if ($exp = $this->_experimentWithDrafts($experiment)) {
+                if ($exp = $this->_experimentWithSections($experiment)) {
                     $active[] = $exp;
                 }
                 continue;
@@ -117,7 +117,7 @@ class Experiments extends Component
 
             // Start date
             if ($experiment->startDate && $currentTime >= $experiment->startDate->format('U')) {
-                if ($exp = $this->_experimentWithDrafts($experiment)) {
+                if ($exp = $this->_experimentWithSections($experiment)) {
                     $active[] = $exp;
                 }
             }
@@ -187,9 +187,6 @@ class Experiments extends Component
 
         $transaction = Craft::$app->getDb()->beginTransaction();
         try {
-
-            // TODO: delete the relations
-
             // Delete the experiment
             Craft::$app->getDb()->createCommand()
                 ->delete(Table::EXPERIMENTS, ['id' => $experiment->id])
@@ -240,19 +237,14 @@ class Experiments extends Component
     }
 
     /**
-     * Returns an experiment as an array with drafts nested on it.
+     * Returns an experiment as an array with sections and their drafts nested on it.
      *
      * @param Experiment $experiment
      * @return array|bool
      */
-    private function _experimentWithDrafts(Experiment $experiment)
+    private function _experimentWithSections(Experiment $experiment)
     {
-        // Need to call the getters so that they get expanded
-        if ($experiment->getDrafts() && $experiment->getCookieName()) {
-            return $experiment->toArray(['*'], ['drafts','controlId','cookieName']);
-        }
-
-        return false;
+        return $experiment->toArray(['*'], ['sections.drafts','cookieName']);
     }
 
 }

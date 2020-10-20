@@ -10,16 +10,16 @@
 
 namespace angellco\abtest\models;
 
-use angellco\abtest\records\ExperimentDraft;
+use angellco\abtest\records\Section as SectionRecord;
 use Craft;
 use craft\base\Model;
-use craft\db\Query;
-use craft\db\Table;
-use craft\elements\Entry;
-use craft\helpers\ElementHelper;
+use craft\helpers\UrlHelper;
 
 /**
  * Experiment model.
+ *
+ * An experiment is a container to hold sections and their control entries and drafts. It controls if the test can run
+ * via the start and end dates and there is one cookie per experiment for each user.
  *
  * @author    Angell & Co
  * @package   AbTest
@@ -56,27 +56,23 @@ class Experiment extends Model
     public $endDate;
 
     /**
-     * @var int|null Field layout ID
+     * @var int|null UID
      */
     public $uid;
-
-    /**
-     * @var string|null The name of the cookie
-     */
-    public $cookieName;
-
-    /**
-     * @var Entry[]|null Array of draft entries
-     */
-    public $drafts;
 
     // Private Properties
     // =========================================================================
 
     /**
-     * @var Entry|null
+     * @var string|null The name of the cookie
      */
-    private $_control;
+    private $_cookieName;
+
+    /**
+     * @var array|null An array of related sections
+     */
+    private $_sections;
+
 
     // Public Methods
     // =========================================================================
@@ -118,99 +114,63 @@ class Experiment extends Model
      */
     public function extraFields()
     {
-        return ['drafts','controlId','cookieName'];
+        return [
+            'cookieName',
+            'sections'
+        ];
     }
 
     /**
-     * Returns all the drafts attached to this experiment
+     * Returns the cookie name that should be used for this experiment.
      *
-     * @return array
+     * @return string|null
      */
-    public function getDrafts(): array
-    {
-        if ($this->drafts !== null) {
-            return $this->drafts;
-        }
-
-        $draftIds = ExperimentDraft::find()
-            ->select('draftId')
-            ->where(['experimentId' => $this->id])
-            ->orderBy(['draftId' => SORT_ASC])
-            ->column();
-
-        if (!$draftIds) {
-            return [];
-        }
-
-        $this->drafts = [];
-        foreach ($draftIds as $draftId) {
-            $this->drafts[] = Entry::find()
-                ->draftId($draftId)
-                ->anyStatus()
-                ->one();
-        }
-
-        return $this->drafts;
-    }
-
-    /**
-     * If there are drafts attached then this returns the control / primary entry.
-     *
-     * You have to be careful _not_ to call this whilst the ElementQuery::EVENT_AFTER_POPULATE_ELEMENT
-     * is running the show - if the request has come from there then we need
-     * to not run this method.
-     *
-     * To that end, it bails if its a front-end request.
-     *
-     * @return Entry|bool
-     */
-    public function getControl(): Entry
-    {
-        if ($this->_control !== null) {
-            return $this->_control;
-        }
-
-        if (!$this->getDrafts()) {
-            return false;
-        }
-
-        if (Craft::$app->getRequest()->getIsSiteRequest()) {
-            return false;
-        }
-
-        $this->_control = $this->getDrafts()[0]->getSource();
-
-        return $this->_control;
-    }
-
-    /**
-     * Returns the source ID of the first draft, which is the root entry or
-     * the "control" entry in the experiment.
-     *
-     * @return bool|int|null
-     */
-    public function getControlId()
-    {
-        if (!$this->getDrafts()) {
-            return false;
-        }
-
-        return (int) $this->getDrafts()[0]->getSourceId();
-    }
-
-
     public function getCookieName()
     {
-        if ($this->cookieName !== null){
-            return $this->cookieName;
+        if ($this->_cookieName !== null){
+            return $this->_cookieName;
         }
 
         if ($this->uid) {
-            $this->cookieName = $this::COOKIE_PREFIX.$this->uid;
+            $this->_cookieName = $this::COOKIE_PREFIX.$this->uid;
         } else {
-            $this->cookieName = $this::COOKIE_PREFIX.'unset';
+            $this->_cookieName = $this::COOKIE_PREFIX.'unset';
         }
 
-        return $this->cookieName;
+        return $this->_cookieName;
+    }
+
+    /**
+     * Returns all the sections related to this experiment.
+     *
+     * @return Section[]
+     */
+    public function getSections()
+    {
+        if ($this->_sections !== null){
+            return $this->_sections;
+        }
+
+        $records = SectionRecord::findAll(['experimentId' => $this->id]);
+
+        $this->_sections = [];
+        foreach ($records as $record) {
+            $this->_sections[] = new Section($record->toArray([
+                'id',
+                'experimentId',
+                'sourceId',
+                // TODO uid ?
+            ]));
+        }
+
+        return $this->_sections;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCpEditUrl()
+    {
+        return UrlHelper::cpUrl('ab-test/experiments/'.$this->id);
     }
 }

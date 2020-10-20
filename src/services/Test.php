@@ -11,11 +11,12 @@
 namespace angellco\abtest\services;
 
 use angellco\abtest\AbTest;
-use angellco\abtest\records\ExperimentDraft;
 use Craft;
 use craft\db\Table;
 use craft\elements\Entry;
 use craft\helpers\Db;
+use craft\helpers\Json;
+use craft\services\Security;
 use yii\base\Component;
 use yii\web\Cookie;
 
@@ -64,23 +65,37 @@ class Test extends Component
 
             if (!$cookie) {
 
-                // Decide which draft they should get or if they get the control
-                $total = count($activeExperiment['drafts']) + 1;
+                $values = [];
 
-                $r = rand(1, $total);
-                if ($r === 1) {
-                    $cookieValue = 'control:0';
-                } else {
-                    $draftIndex = $r-2;
-                    $optimizeIndex = $draftIndex+1;
-                    $cookieValue = 'test:'.$activeExperiment['drafts'][$draftIndex]['uid'].':'.$optimizeIndex;
+                // For each section, pick the draft or control they should get
+                foreach ($activeExperiment['sections'] as $section) {
+
+                    $total = count($section['drafts']) + 1;
+
+                    $r = rand(1, $total);
+
+                    if ($r === 1) {
+                        $values[$section['id']] = [
+                            'control' => true,
+                            'draftId' => null,
+                            'index' => 0
+                        ];
+                    } else {
+                        $draftIndex = $r-2;
+                        $optimizeIndex =
+                        $values[$section['id']] = [
+                            'control' => false,
+                            'draftId' => $section['drafts'][$draftIndex]['id'],
+                            'index' => $draftIndex+1
+                        ];
+                    }
                 }
 
                 // Create the cookie and add it
                 $cookie = Craft::createObject(array_merge(Craft::cookieConfig(), [
                     'class' => 'yii\web\Cookie',
                     'name' => $activeExperiment['cookieName'],
-                    'value' => $cookieValue,
+                    'value' => Json::encode($values),
                 ]));
 
                 $response->getCookies()->add($cookie);
@@ -100,41 +115,51 @@ class Test extends Component
             return false;
         }
 
-        // Find the applicable experiment for this entry
-        $applicableExperiment = null;
+        // Find the applicable experiment and section for this entry
+        $cookieName = null;
+        $applicableSection = null;
         foreach ($this->_getActiveExperiments() as $activeExperiment) {
-            if ($activeExperiment['controlId'] === $entry->id) {
-                $applicableExperiment = $activeExperiment;
-                break;
+            foreach ($activeExperiment['sections'] as $section) {
+                if ($section['sourceId'] === $entry->id) {
+                    $cookieName = $activeExperiment['cookieName'];
+                    $applicableSection = $section;
+                    break;
+                }
             }
         }
 
         // If there isn’t one, then bail
-        if (!$applicableExperiment) {
+        if (!$cookieName) {
             return false;
         }
 
-        $cookie = $this->_getCookie($applicableExperiment['cookieName']);
+        $cookie = $this->_getCookie($cookieName);
 
         // If we still don’t have a cookie for whatever reason then default to showing the control by returning false
         if (!$cookie) {
             return false;
         }
 
+        // Get the cookie data and filter out the part we need for this entry
+        $cookieData = Json::decode($cookie->value);
+        if (!isset($cookieData[$applicableSection['id']])) {
+            return false;
+        }
+        $sectionData = $cookieData[$applicableSection['id']];
+
         // We have a testable session, so check if its control and bail if so
-        if (strpos($cookie->value, 'test:') === false) {
+        if ($sectionData['control'] === true) {
             return false;
         }
 
-        // So, we now know we need to return the draft based on what is in the cookie
-        $cookieParts = explode(':', $cookie->value);
-        $draftEntryUid = $cookieParts[1];
-        $entryId = Db::idByUid(Table::ELEMENTS, $draftEntryUid);
-        return Craft::$app->getElements()->getElementById($entryId, Entry::class);
+        // Return the draft based on the draft ID stored in the cookie
+        return Craft::$app->getElements()->getElementById($sectionData['draftId'], Entry::class);
     }
 
     /**
      * Returns all the cookies that are currently actively in use.
+     *
+     * TODO: for blitz
      *
      * @return array|bool
      */
@@ -154,6 +179,8 @@ class Test extends Component
 
     /**
      * Returns all the active cookies as a hash of their name / value combinations.
+     *
+     * TODO: for blitz
      *
      * @return bool|string
      */
@@ -177,6 +204,8 @@ class Test extends Component
 
     /**
      * Returns true if the Entry is a Draft and in an experiment.
+     *
+     * TODO: for blitz
      *
      * @param Entry $entry
      * @return bool
