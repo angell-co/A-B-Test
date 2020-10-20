@@ -16,6 +16,8 @@ use yii\db\ActiveQueryInterface;
 
 /**
  * @property int $id ID
+ * @property int $experimentId
+ * @property int $sourceId
  * @property ActiveQueryInterface $sectionDrafts
  *
  * @author    Angell & Co

@@ -11,7 +11,7 @@
 namespace angellco\abtest;
 
 use angellco\abtest\base\PluginTrait;
-use angellco\abtest\records\ExperimentDraft;
+use angellco\abtest\records\SectionDraft;
 use angellco\abtest\services\Experiments;
 use angellco\abtest\services\Test;
 use angellco\abtest\variables\AbTestVariable;
@@ -169,7 +169,7 @@ class AbTest extends Plugin
                             // Now we have the draft data we can get the relations records that already exist
                             // for those drafts, if there are any
                             $draftIds = array_column($draftData, 'draftId');
-                            $expDraftRecords = ExperimentDraft::find()
+                            $expDraftRecords = SectionDraft::find()
                                 ->where(['draftId' => $draftIds])
                                 ->all();
 
