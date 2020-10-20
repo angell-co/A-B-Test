@@ -27,7 +27,11 @@
 
             <div class="footer">
                 <div class="spinner" v-if="loading"></div>
-                <button class="btn submit" @click.prevent="actionUpdate">Update</button>
+
+                <div class="buttons right">
+                    <a :href="experimentEditUrl" class="btn" v-if="section.id">View</a>
+                    <button class="btn submit" @click.prevent="actionUpdate">Update</button>
+                </div>
             </div>
         </template>
     </div>
@@ -96,7 +100,15 @@
                 })
                     .then( (response) => {
                         this.loading = false;
-                        this.section = response.data.section;
+                        if (response.data.section) {
+                            this.section = response.data.section;
+                        } else {
+                            this.section = {
+                                'id' : null,
+                                'sourceId' : this.section.sourceId,
+                                'drafts' : []
+                            };
+                        }
                     })
                     .catch( (error) => {
                         this.loading = false;
@@ -109,6 +121,12 @@
         computed: {
             hasExperiments () {
                 return this.experimentOptions.length >= 1;
+            },
+            experimentEditUrl () {
+                if (!this.experimentId) {
+                    return null;
+                }
+                return Craft.getCpUrl('ab-test/experiments/'+this.experimentId);
             }
         }
     }

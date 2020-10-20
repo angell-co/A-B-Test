@@ -113,7 +113,7 @@ class Section extends Model
     }
 
     /**
-     * If there are drafts attached then this returns the control / primary entry.
+     * This returns the control / source entry.
      *
      * You have to be careful _not_ to call this whilst the ElementQuery::EVENT_AFTER_POPULATE_ELEMENT
      * is running the show - if the request has come from there then we need
@@ -129,15 +129,11 @@ class Section extends Model
             return $this->_control;
         }
 
-        if (!$this->getDrafts()) {
-            return false;
-        }
-
         if (Craft::$app->getRequest()->getIsSiteRequest()) {
             return false;
         }
 
-        $this->_control = $this->getDrafts()[0]->getSource();
+        $this->_control = Craft::$app->getElements()->getElementById($this->sourceId, Entry::class);
 
         return $this->_control;
     }

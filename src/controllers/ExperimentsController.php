@@ -83,6 +83,19 @@ class ExperimentsController extends Controller
         $variables['experimentId'] = $experimentId;
         $variables['experiment'] = $experiment;
 
+        // Prep the table data
+        $variables['draftsTableData'] = [];
+        foreach ($variables['experiment']->getSections() as $section) {
+            foreach ($section->getDrafts() as $draft) {
+                $variables['draftsTableData'][$section->id][] = [
+                    'id' => $draft->draftId,
+                    'title' => $draft->draftName,
+                    'notes' =>  $draft->draftNotes,
+                    'url' => $draft->cpEditUrl.'?draftId='.$draft->draftId,
+                ];
+            }
+        }
+
         // Breadcrumbs
         $variables['crumbs'] = [
             [

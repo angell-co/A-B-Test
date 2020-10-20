@@ -10,8 +10,10 @@
 
 namespace angellco\abtest\models;
 
+use angellco\abtest\records\Section as SectionRecord;
 use Craft;
 use craft\base\Model;
+use craft\helpers\UrlHelper;
 
 /**
  * Experiment model.
@@ -127,4 +129,33 @@ class Experiment extends Model
         return $this->cookieName;
     }
 
+    /**
+     * Returns all the sections related to this experiment.
+     *
+     * @return Section[]
+     */
+    public function getSections()
+    {
+        $records = SectionRecord::findAll(['experimentId' => $this->id]);
+
+        $sections = [];
+        foreach ($records as $record) {
+            $sections[] = new Section($record->toArray([
+                'id',
+                'experimentId',
+                'sourceId',
+                // TODO uid ?
+            ]));
+        }
+
+        return $sections;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCpEditUrl()
+    {
+        return UrlHelper::cpUrl('ab-test/experiments/'.$this->id);
+    }
 }

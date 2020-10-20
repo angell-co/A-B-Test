@@ -96,12 +96,14 @@ class Sections extends Component
             return false;
         }
 
+        // Prep the record
         $record->experimentId = $model->experimentId;
         $record->sourceId = $model->sourceId;
 
         $db = Craft::$app->getDb();
         $transaction = $db->beginTransaction();
         try {
+
             // Save it!
             $record->save(false);
 

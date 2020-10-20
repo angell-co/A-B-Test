@@ -45,7 +45,26 @@ class SectionsController extends Controller
         $section->experimentId = Craft::$app->getRequest()->getRequiredBodyParam('experimentId');
         $section->draftIds = Craft::$app->getRequest()->getRequiredBodyParam('draftIds');
 
-        // Save it
+        // Deal with no drafts
+        if (empty($section->draftIds)) {
+            // If we already have a section, remove it
+            if ($section->id) {
+                if (AbTest::$plugin->getSections()->deleteSectionById($section->id)) {
+                    return $this->asJson([
+                        'success' => true,
+                    ]);
+                }
+
+                return $this->asErrorJson('Couldn’t remove all drafts.');
+            }
+
+            // If not, just return a success response with no section created
+            return $this->asJson([
+                'success' => true,
+            ]);
+        }
+
+        // If we got this far, we have drafts
         if (AbTest::$plugin->getSections()->saveSection($section)) {
             return $this->asJson([
                 'success' => true,

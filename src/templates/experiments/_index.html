@@ -32,7 +32,7 @@
     {% set tableData = tableData|merge([{
         id: experiment.id,
         title: experiment.name|t('site'),
-        url: url('ab-test/experiments/' ~ experiment.id),
+        url: experiment.cpEditUrl,
         startDate: experiment.startDate ? experiment.startDate|datetime('short') : null,
         endDate: experiment.endDate ? experiment.endDate|datetime('short') : null,
         itemCount: 'TODO'
