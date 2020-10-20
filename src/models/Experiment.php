@@ -10,16 +10,14 @@
 
 namespace angellco\abtest\models;
 
-use angellco\abtest\records\ExperimentDraft;
 use Craft;
 use craft\base\Model;
-use craft\db\Query;
-use craft\db\Table;
-use craft\elements\Entry;
-use craft\helpers\ElementHelper;
 
 /**
  * Experiment model.
+ *
+ * An experiment is a container to hold sections and their control entries and drafts. It controls if the test can run
+ * via the start and end dates and there is one cookie per experiment for each user.
  *
  * @author    Angell & Co
  * @package   AbTest
@@ -65,18 +63,6 @@ class Experiment extends Model
      */
     public $cookieName;
 
-    /**
-     * @var Entry[]|null Array of draft entries
-     */
-    public $drafts;
-
-    // Private Properties
-    // =========================================================================
-
-    /**
-     * @var Entry|null
-     */
-    private $_control;
 
     // Public Methods
     // =========================================================================
@@ -118,87 +104,14 @@ class Experiment extends Model
      */
     public function extraFields()
     {
-        return ['drafts','controlId','cookieName'];
+        return ['cookieName'];
     }
 
     /**
-     * Returns all the drafts attached to this experiment
+     * Returns the cookie name that should be used for this experiment.
      *
-     * @return array
+     * @return string|null
      */
-    public function getDrafts(): array
-    {
-        if ($this->drafts !== null) {
-            return $this->drafts;
-        }
-
-        $draftIds = ExperimentDraft::find()
-            ->select('draftId')
-            ->where(['experimentId' => $this->id])
-            ->orderBy(['draftId' => SORT_ASC])
-            ->column();
-
-        if (!$draftIds) {
-            return [];
-        }
-
-        $this->drafts = [];
-        foreach ($draftIds as $draftId) {
-            $this->drafts[] = Entry::find()
-                ->draftId($draftId)
-                ->anyStatus()
-                ->one();
-        }
-
-        return $this->drafts;
-    }
-
-    /**
-     * If there are drafts attached then this returns the control / primary entry.
-     *
-     * You have to be careful _not_ to call this whilst the ElementQuery::EVENT_AFTER_POPULATE_ELEMENT
-     * is running the show - if the request has come from there then we need
-     * to not run this method.
-     *
-     * To that end, it bails if its a front-end request.
-     *
-     * @return Entry|bool
-     */
-    public function getControl(): Entry
-    {
-        if ($this->_control !== null) {
-            return $this->_control;
-        }
-
-        if (!$this->getDrafts()) {
-            return false;
-        }
-
-        if (Craft::$app->getRequest()->getIsSiteRequest()) {
-            return false;
-        }
-
-        $this->_control = $this->getDrafts()[0]->getSource();
-
-        return $this->_control;
-    }
-
-    /**
-     * Returns the source ID of the first draft, which is the root entry or
-     * the "control" entry in the experiment.
-     *
-     * @return bool|int|null
-     */
-    public function getControlId()
-    {
-        if (!$this->getDrafts()) {
-            return false;
-        }
-
-        return (int) $this->getDrafts()[0]->getSourceId();
-    }
-
-
     public function getCookieName()
     {
         if ($this->cookieName !== null){
@@ -213,4 +126,5 @@ class Experiment extends Model
 
         return $this->cookieName;
     }
+
 }

@@ -15,31 +15,29 @@ use craft\db\ActiveRecord;
 use yii\db\ActiveQueryInterface;
 
 /**
- * Experiment / draft relationship record
- *
- * @property int $experimentId
+ * @property int $sectionId
  * @property int $draftId
- * @property ActiveQueryInterface $experiment
+ * @property ActiveQueryInterface $section
  *
  * @author    Angell & Co
  * @package   AbTest
  * @since     1.0.0
  */
-class ExperimentDraft extends ActiveRecord
+class SectionDraft extends ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName(): string
     {
-        return Table::EXPERIMENTS_DRAFTS;
+        return Table::SECTION_DRAFTS;
     }
 
     /**
      * @return ActiveQueryInterface
      */
-    public function getExperiment(): ActiveQueryInterface
+    public function getSection(): ActiveQueryInterface
     {
-        return $this->hasOne(Experiment::class, ['id' => 'experimentId']);
+        return $this->hasOne(Section::class, ['id' => 'sectionId']);
     }
 }

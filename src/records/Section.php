@@ -16,10 +16,7 @@ use yii\db\ActiveQueryInterface;
 
 /**
  * @property int $id ID
- * @property string $name Name
- * @property string $startDate Start date
- * @property string $endDate End date
- * @property ActiveQueryInterface $sections
+ * @property ActiveQueryInterface $sectionDrafts
  *
  * @author    Angell & Co
  * @package   AbTest
@@ -41,8 +38,8 @@ class Experiment extends ActiveRecord
     /**
      * @return ActiveQueryInterface
      */
-    public function getSections(): ActiveQueryInterface
+    public function getSectionDrafts(): ActiveQueryInterface
     {
-        return $this->hasMany(Section::class, ['sectionId' => 'id']);
+        return $this->hasMany(SectionDraft::class, ['draftId' => 'id']);
     }
 }
