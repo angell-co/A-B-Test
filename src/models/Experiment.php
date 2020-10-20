@@ -60,10 +60,18 @@ class Experiment extends Model
      */
     public $uid;
 
+    // Private Properties
+    // =========================================================================
+
     /**
      * @var string|null The name of the cookie
      */
-    public $cookieName;
+    private $_cookieName;
+
+    /**
+     * @var array|null An array of related sections
+     */
+    private $_sections;
 
 
     // Public Methods
@@ -106,7 +114,10 @@ class Experiment extends Model
      */
     public function extraFields()
     {
-        return ['cookieName'];
+        return [
+            'cookieName',
+            'sections'
+        ];
     }
 
     /**
@@ -116,17 +127,17 @@ class Experiment extends Model
      */
     public function getCookieName()
     {
-        if ($this->cookieName !== null){
-            return $this->cookieName;
+        if ($this->_cookieName !== null){
+            return $this->_cookieName;
         }
 
         if ($this->uid) {
-            $this->cookieName = $this::COOKIE_PREFIX.$this->uid;
+            $this->_cookieName = $this::COOKIE_PREFIX.$this->uid;
         } else {
-            $this->cookieName = $this::COOKIE_PREFIX.'unset';
+            $this->_cookieName = $this::COOKIE_PREFIX.'unset';
         }
 
-        return $this->cookieName;
+        return $this->_cookieName;
     }
 
     /**
@@ -136,11 +147,15 @@ class Experiment extends Model
      */
     public function getSections()
     {
+        if ($this->_sections !== null){
+            return $this->_sections;
+        }
+
         $records = SectionRecord::findAll(['experimentId' => $this->id]);
 
-        $sections = [];
+        $this->_sections = [];
         foreach ($records as $record) {
-            $sections[] = new Section($record->toArray([
+            $this->_sections[] = new Section($record->toArray([
                 'id',
                 'experimentId',
                 'sourceId',
@@ -148,7 +163,7 @@ class Experiment extends Model
             ]));
         }
 
-        return $sections;
+        return $this->_sections;
     }
 
     /**

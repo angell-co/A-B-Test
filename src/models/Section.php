@@ -144,13 +144,13 @@ class Section extends Model
      *
      * @return bool|int|null
      */
-    public function getControlId()
-    {
-        if (!$this->getDrafts()) {
-            return false;
-        }
-
-        return (int) $this->getDrafts()[0]->getSourceId();
-    }
+//    public function getControlId()
+//    {
+//        if (!$this->getDrafts()) {
+//            return false;
+//        }
+//
+//        return (int) $this->getDrafts()[0]->getSourceId();
+//    }
 
 }
