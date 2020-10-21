@@ -98,11 +98,51 @@ class AbTest extends Plugin
         parent::init();
         self::$plugin = $this;
 
-        $this->_setPluginComponents();
-
         $request = Craft::$app->getRequest();
         $response = Craft::$app->getResponse();
 
+        $this->_setPluginComponents();
+        $this->installGlobalEventListeners();
+
+        if ($request->getIsCpRequest() && !$request->getIsConsoleRequest()) {
+            $this->installCpEventListeners();
+        }
+
+        if ($response->getIsOk() && $request->getIsSiteRequest() && !$request->getIsConsoleRequest()) {
+            $this->installSiteEventListeners();
+        }
+
+        // If blitz is installed, register the event listeners we need for that
+        if (class_exists(Blitz::class)) {
+            $this->installBlitzEventListeners();
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getCpNavItem()
+    {
+        $ret = parent::getCpNavItem();
+
+        $ret['label'] = Craft::t('ab-test', 'A/B Test');
+
+        $ret['subnav']['experiments'] = [
+            'label' => Craft::t('ab-test', 'Experiments'),
+            'url' => 'ab-test/experiments'
+        ];
+
+        return $ret;
+    }
+
+    // Private Methods
+    // =========================================================================
+
+    /**
+     * Global event listeners
+     */
+    protected function installGlobalEventListeners()
+    {
         // Register the variable class
         Event::on(CraftVariable::class, CraftVariable::EVENT_INIT,
             function(Event $event) {
@@ -111,7 +151,13 @@ class AbTest extends Plugin
                 $variable->set('abtest', AbTestVariable::class);
             }
         );
+    }
 
+    /**
+     * CP event listeners
+     */
+    protected function installCpEventListeners()
+    {
         // Register the CP routes
         Event::on(
             UrlManager::class,
@@ -124,73 +170,77 @@ class AbTest extends Plugin
         );
 
         // Entries sidebar
-        // TODO: refactor this out
-        if ($request->getIsCpRequest() && !$request->getIsConsoleRequest()) {
-            Craft::$app->getView()->hook('cp.entries.edit.details', function (&$context) {
-                $html = '';
+        Craft::$app->getView()->hook('cp.entries.edit.details', function (&$context) {
+            $html = '';
 
-                /** @var  $entry Entry */
-                $entry = $context['entry'];
-                if ($entry !== null && !$entry->getIsDraft()) {
+            /** @var  $entry Entry */
+            $entry = $context['entry'];
+            if ($entry !== null && !$entry->getIsDraft()) {
 
-                    $experimentOptions = [];
-                    $draftData = [];
-                    $expDrafts = [];
-                    $experiments = $this->getExperiments()->getAllExperiments();
-                    $section = null;
+                $experimentOptions = [];
+                $draftData = [];
+                $expDrafts = [];
+                $experiments = $this->getExperiments()->getAllExperiments();
+                $section = null;
 
-                    if ($experiments) {
-                        foreach ($experiments as $experiment) {
-                            $experimentOptions[] = [
-                                'label' => $experiment->name,
-                                'value' => $experiment->id,
-                                'checked' => false
+                if ($experiments) {
+                    foreach ($experiments as $experiment) {
+                        $experimentOptions[] = [
+                            'label' => $experiment->name,
+                            'value' => $experiment->id,
+                            'checked' => false
+                        ];
+                    }
+
+                    // Drafts
+                    $drafts = Entry::find()
+                        ->draftOf($entry)
+                        ->siteId($entry->siteId)
+                        ->anyStatus()
+                        ->orderBy(['id' => SORT_ASC])
+                        ->limit(null)
+                        ->all();
+
+                    if ($drafts) {
+                        $draftData = [];
+                        foreach ($drafts as $draft) {
+                            $draftData[] = [
+                                'id' => $draft->id,
+                                'draftId' => $draft->draftId,
+                                'title' => $draft->draftName,
+                                'note' => $draft->draftNotes,
                             ];
                         }
-
-                        // Drafts
-                        $drafts = Entry::find()
-                            ->draftOf($entry)
-                            ->siteId($entry->siteId)
-                            ->anyStatus()
-                            ->orderBy(['id' => SORT_ASC])
-                            ->limit(null)
-                            ->all();
-
-                        if ($drafts) {
-                            $draftData = [];
-                            foreach ($drafts as $draft) {
-                                $draftData[] = [
-                                    'id' => $draft->id,
-                                    'draftId' => $draft->draftId,
-                                    'title' => $draft->draftName,
-                                    'note' => $draft->draftNotes,
-                                ];
-                            }
-                        }
-
-                        // Existing section
-                        $section = $this->getSections()->getSectionBySourceId($entry->id);
                     }
 
-                    if (!$section) {
-                        $section = new Section(['sourceId' => $entry->id]);
-                    }
-
-                    $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
-                        'experimentOptions' => $experimentOptions,
-                        'drafts' => $draftData,
-                        'section' => $section->toArray(['*'], ['drafts'])
-                    ]);
-
+                    // Existing section
+                    $section = $this->getSections()->getSectionBySourceId($entry->id);
                 }
 
-                return $html;
-            });
-        }
+                if (!$section) {
+                    $section = new Section(['sourceId' => $entry->id]);
+                }
+
+                $html .= Craft::$app->view->renderTemplate('ab-test/entry-sidebar', [
+                    'experimentOptions' => $experimentOptions,
+                    'drafts' => $draftData,
+                    'section' => $section->toArray(['*'], ['drafts'])
+                ]);
+
+            }
+
+            return $html;
+        });
+    }
+
+    /**
+     * Site event listeners
+     */
+    protected function installSiteEventListeners()
+    {
+        $test = $this->getTest();
 
         // Cookie the user for all active experiments
-        $test = $this->getTest();
         Event::on(Application::class, Application::EVENT_INIT,
             function() use($test) {
                 $test->cookie();
@@ -199,8 +249,8 @@ class AbTest extends Plugin
 
         // When populating an element on the front-end, check the cookies to see if we need to swap in a draft
         Event::on(ElementQuery::class, ElementQuery::EVENT_AFTER_POPULATE_ELEMENT,
-            function(PopulateElementEvent $event) use($request, $response, $test) {
-                if ($response->getIsOk() && $request->getIsSiteRequest() && $event->element !== null && is_a($event->element, Entry::class)) {
+            function(PopulateElementEvent $event) use($test) {
+                if ($event->element !== null && is_a($event->element, Entry::class)) {
 
                     /** @var Entry $entry */
                     $entry = $event->element;
@@ -216,7 +266,13 @@ class AbTest extends Plugin
                 }
             }
         );
+    }
 
+    /**
+     * Install Blitz-specific event listeners
+     */
+    protected function installBlitzEventListeners()
+    {
         // Need a new event so we can get in front of the get value method and return a modded uri
 //        Event::on(CacheRequestService::class, CacheRequestService::EVENT_BEFORE_GET_RESPONSE,
 //            function(ResponseEvent $event) use($test) {
@@ -234,7 +290,7 @@ class AbTest extends Plugin
 //        );
 
 
-        // TODO: when saving an experiment/draft relationship make sure to add element IDs and refresh
+        // TODO: for blitz when saving an experiment/draft relationship make sure to add element IDs and refresh
 
 
         // Make drafts purge the Blitz cache if needed
@@ -258,22 +314,4 @@ class AbTest extends Plugin
 //            }
 //        );
     }
-
-    /**
-     * @inheritdoc
-     */
-    public function getCpNavItem()
-    {
-        $ret = parent::getCpNavItem();
-
-        $ret['label'] = Craft::t('ab-test', 'A/B Test');
-
-        $ret['subnav']['experiments'] = [
-            'label' => Craft::t('ab-test', 'Experiments'),
-            'url' => 'ab-test/experiments'
-        ];
-
-        return $ret;
-    }
-
 }

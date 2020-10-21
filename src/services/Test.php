@@ -47,16 +47,11 @@ class Test extends Component
      */
     public function cookie()
     {
-        $request = Craft::$app->getRequest();
-        $response = Craft::$app->getResponse();
-
-        if (!$response->getIsOk() || !$request->getIsSiteRequest()) {
-            return;
-        }
-
         if (!$this->_getActiveExperiments()) {
             return;
         }
+
+        $response = Craft::$app->getResponse();
 
         // Sort out the cookies - one for each experiment
         foreach ($this->_getActiveExperiments() as $activeExperiment) {
