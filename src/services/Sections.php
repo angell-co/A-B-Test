@@ -122,7 +122,6 @@ class Sections extends Component
             }
 
             $transaction->commit();
-
         } catch (\Exception $e) {
             $transaction->rollBack();
             throw $e;
@@ -140,10 +139,6 @@ class Sections extends Component
      */
     public function deleteSectionById(int $sectionId): bool
     {
-        if (!$sectionId) {
-            return false;
-        }
-
         $section = $this->getSectionById($sectionId);
 
         if (!$section) {
@@ -155,6 +150,41 @@ class Sections extends Component
             // Delete the section
             Craft::$app->getDb()->createCommand()
                 ->delete(Table::SECTIONS, ['id' => $section->id])
+                ->execute();
+
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+
+        return true;
+    }
+
+    /**
+     * Deletes a section draft relationship.
+     *
+     * @param int $sectionId
+     * @param int $draftId
+     * @return bool
+     * @throws \Throwable
+     */
+    public function deleteDraft(int $sectionId, int $draftId): bool
+    {
+        $section = $this->getSectionById($sectionId);
+
+        if (!$section) {
+            return false;
+        }
+
+        $transaction = Craft::$app->getDb()->beginTransaction();
+        try {
+            // Delete the section
+            Craft::$app->getDb()->createCommand()
+                ->delete(Table::SECTION_DRAFTS, [
+                    'sectionId' => $section->id,
+                    'draftId' => $draftId,
+                ])
                 ->execute();
 
             $transaction->commit();

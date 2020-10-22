@@ -74,4 +74,27 @@ class SectionsController extends Controller
 
         return $this->asErrorJson('Couldn’t save section.');
     }
+
+
+    /**
+     * Deletes an section draft relationship.
+     *
+     * The ID param has the value of `sectionId:draftId` because the data table will only let me send one value AFAIK.
+     *
+     * @return Response
+     */
+    public function actionDeleteDraft(): Response
+    {
+        $this->requirePostRequest();
+        $this->requireAcceptsJson();
+
+        $ids = $this->request->getRequiredBodyParam('id');
+
+        $parts = explode(':', $ids);
+
+        AbTest::$plugin->getSections()->deleteDraft($parts[0], $parts[1]);
+
+        return $this->asJson(['success' => true]);
+    }
+
 }

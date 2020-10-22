@@ -87,7 +87,7 @@
                     new Craft.VueAdminTable({
                         columns: columns,
                         container: '#abtest-experiment-drafts-vue-admin-table-{{ section.id }}',
-                        deleteAction: 'ab-test/experiment-drafts/delete',
+                        deleteAction: 'ab-test/sections/delete-draft',
                         emptyMessage: Craft.t('ab-test', 'No drafts have been added yet.'),
                         tableData: {{ draftsTableData[section.id]|json_encode|raw }},
                     });

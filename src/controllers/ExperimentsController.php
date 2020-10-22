@@ -88,7 +88,7 @@ class ExperimentsController extends Controller
         foreach ($variables['experiment']->getSections() as $section) {
             foreach ($section->getDrafts() as $draft) {
                 $variables['draftsTableData'][$section->id][] = [
-                    'id' => $draft->draftId,
+                    'id' => $section->id.':'.$draft->draftId,
                     'title' => $draft->draftName,
                     'notes' =>  $draft->draftNotes,
                     'url' => $draft->cpEditUrl.'?draftId='.$draft->draftId,
