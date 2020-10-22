@@ -177,6 +177,11 @@ class Sections extends Component
             return false;
         }
 
+        // If there is only one draft, then just delete the section
+        if (count($section->getDrafts()) === 1) {
+            return $this->deleteSectionById($section->id);
+        }
+
         $transaction = Craft::$app->getDb()->beginTransaction();
         try {
             // Delete the section
