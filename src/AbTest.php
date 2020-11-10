@@ -273,25 +273,25 @@ class AbTest extends Plugin
      */
     protected function installBlitzEventListeners()
     {
-        // Need a new event so we can get in front of the get value method and return a modded uri
-//        Event::on(CacheRequestService::class, CacheRequestService::EVENT_BEFORE_GET_RESPONSE,
-//            function(ResponseEvent $event) use($test) {
-//                $test->cookie();
-//                $cookieHash = $test->getActiveCookiesAsHash();
-//                if ($cookieHash) {
-//                    // Check if it already contains a query or not
-//                    if (Craft::$app->getRequest()->getQueryStringWithoutPath()) {
-//                        $siteUri->uri .= '&abtest=' . $cookieHash;
-//                    } else {
-//                        $siteUri->uri .= '?abtest=' . $cookieHash;
-//                    }
-//                }
-//            }
-//        );
+        // Modify the URI for Blitz so it caches alternative versions
+        Event::on(CacheRequestService::class, CacheRequestService::EVENT_BEFORE_GET_RESPONSE,
+            function(ResponseEvent $event) {
+                $test = AbTest::$plugin->getTest();
+                $test->cookie();
+                $cookieHash = $test->getActiveCookiesAsHash();
+                if ($cookieHash) {
+                    // Check if it already contains a query or not
+                    if (Craft::$app->getRequest()->getQueryStringWithoutPath()) {
+                        $event->siteUri->uri .= '&abtest=' . $cookieHash;
+                    } else {
+                        $event->siteUri->uri .= '?abtest=' . $cookieHash;
+                    }
+                }
+            }
+        );
 
 
         // TODO: for blitz when saving an experiment/draft relationship make sure to add element IDs and refresh
-
 
         // Make drafts purge the Blitz cache if needed
 //        Event::on(Elements::class, Elements::EVENT_AFTER_SAVE_ELEMENT,
@@ -304,13 +304,6 @@ class AbTest extends Plugin
 //                        Blitz::$plugin->refreshCache->refresh();
 //                    }
 //                }
-//            }
-//        );
-
-        // Do we need this one? Don’t think so.
-//        Event::on(GenerateCacheService::class, GenerateCacheService::EVENT_BEFORE_SAVE_CACHE,
-//            function(SaveCacheEvent $event) use($test) {
-//                Craft::dd($event);
 //            }
 //        );
     }
