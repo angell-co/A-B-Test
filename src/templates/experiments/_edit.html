@@ -25,13 +25,22 @@
     {{ forms.textField({
         first: true,
         label: "Name"|t('app'),
-        instructions: "What this experiment will be called in the CP."|t('vend'),
+        instructions: "What this experiment will be called in the CP."|t('ab-test'),
         id: 'name',
         name: 'name',
         value: experiment.name,
         errors: experiment.getErrors('name'),
         autofocus: true,
         required: true,
+    }) }}
+
+    {{ forms.textField({
+        label: "Google Optimize Experiment ID"|t('ab-test'),
+        instructions: "The ID of your Google Optimize Experiment which can be found under the Measurement and objectives section on the Details tab in Optimize."|t('ab-test'),
+        id: 'optimizeId',
+        name: 'optimizeId',
+        value: experiment.optimizeId,
+        errors: experiment.getErrors('optimizeId'),
     }) }}
 
     {{ forms.dateTimeField({

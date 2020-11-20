@@ -29,13 +29,19 @@
 
 {% set tableData = [] %}
 {% for experiment in experiments %}
+
+    {% set itemCount = 0 %}
+    {% for section in experiment.getSections() %}
+        {% set itemCount = itemCount + section.getDrafts()|length %}
+    {% endfor %}
+
     {% set tableData = tableData|merge([{
         id: experiment.id,
         title: experiment.name|t('site'),
         url: experiment.cpEditUrl,
         startDate: experiment.startDate ? experiment.startDate|datetime('short') : null,
         endDate: experiment.endDate ? experiment.endDate|datetime('short') : null,
-        itemCount: 'TODO'
+        itemCount: itemCount
     }]) %}
 {% endfor %}
 

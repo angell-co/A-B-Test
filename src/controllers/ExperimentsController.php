@@ -13,9 +13,11 @@ namespace angellco\abtest\controllers;
 use angellco\abtest\AbTest;
 use angellco\abtest\models\Experiment;
 use Craft;
+use craft\errors\MissingComponentException;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
+use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 
@@ -36,7 +38,6 @@ class ExperimentsController extends Controller
      * List experiments.
      *
      * @return Response
-     * @throws ForbiddenHttpException
      */
     public function actionIndex(): Response
     {
@@ -117,8 +118,9 @@ class ExperimentsController extends Controller
     /**
      * Save experiment.
      *
-     * @throws \craft\errors\MissingComponentException
-     * @throws \yii\web\BadRequestHttpException
+     * @throws MissingComponentException
+     * @throws BadRequestHttpException
+     * @throws \Exception
      */
     public function actionSave()
     {
@@ -129,6 +131,7 @@ class ExperimentsController extends Controller
         // Shared attributes
         $experiment->id = Craft::$app->getRequest()->getBodyParam('experimentId');
         $experiment->name = Craft::$app->getRequest()->getBodyParam('name');
+        $experiment->optimizeId = Craft::$app->getRequest()->getBodyParam('optimizeId');
 
         if ($startDate = Craft::$app->getRequest()->getBodyParam('startDate')) {
             $experiment->startDate = DateTimeHelper::toDateTime($startDate) ?: null;
@@ -155,6 +158,7 @@ class ExperimentsController extends Controller
      * Deletes an experiment.
      *
      * @return Response
+     * @throws BadRequestHttpException|\Throwable
      */
     public function actionDelete(): Response
     {

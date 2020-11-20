@@ -21,6 +21,10 @@ use craft\helpers\UrlHelper;
  * An experiment is a container to hold sections and their control entries and drafts. It controls if the test can run
  * via the start and end dates and there is one cookie per experiment for each user.
  *
+ * @property-read string $cpEditUrl
+ * @property-read null|string $cookieName
+ * @property-read null|Section[] $sections
+ *
  * @author    Angell & Co
  * @package   AbTest
  * @since     1.0.0
@@ -44,6 +48,11 @@ class Experiment extends Model
      * @var string|null Name
      */
     public $name;
+
+    /**
+     * @var string|null Google Optimize Experiment ID
+     */
+    public $optimizeId;
 
     /**
      * @var \DateTime Start date
@@ -80,7 +89,7 @@ class Experiment extends Model
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'name' => Craft::t('app', 'Name'),
@@ -112,7 +121,7 @@ class Experiment extends Model
     /**
      * @inheritdoc
      */
-    public function extraFields()
+    public function extraFields(): array
     {
         return [
             'cookieName',
@@ -159,7 +168,6 @@ class Experiment extends Model
                 'id',
                 'experimentId',
                 'sourceId',
-                // TODO uid ?
             ]));
         }
 
@@ -169,7 +177,7 @@ class Experiment extends Model
     /**
      * @return string
      */
-    public function getCpEditUrl()
+    public function getCpEditUrl(): string
     {
         return UrlHelper::cpUrl('ab-test/experiments/'.$this->id);
     }

@@ -10,11 +10,15 @@
 
 namespace angellco\abtest\services;
 
+use angellco\abtest\AbTest;
 use angellco\abtest\db\Table;
 use angellco\abtest\models\Section;
+use angellco\abtest\records\Experiment as ExperimentRecord;
 use angellco\abtest\records\Section as SectionRecord;
 use angellco\abtest\records\SectionDraft;
 use Craft;
+use craft\helpers\StringHelper;
+use Exception;
 use yii\base\Component;
 
 /**
@@ -32,7 +36,7 @@ class Sections extends Component
     /**
      * Returns a section by its ID.
      *
-     * @param int $experimentId
+     * @param int $sectionId
      * @return Section|null
      */
     public function getSectionById(int $sectionId)
@@ -77,6 +81,7 @@ class Sections extends Component
      * @param Section $model
      * @param bool $runValidation
      * @return bool
+     * @throws Exception
      */
     public function saveSection(Section $model, $runValidation = true): bool
     {
@@ -84,8 +89,10 @@ class Sections extends Component
             $record = SectionRecord::findOne($model->id);
 
             if (!$record) {
-                throw new Exception(Craft::t('ab-test', 'No section exists with the ID “{id}”', ['id' => $model->id]));
+                throw new \RuntimeException(Craft::t('ab-test', 'No section exists with the ID “{id}”', ['id' => $model->id]));
             }
+
+            // For existing sections
         } else {
             $record = new SectionRecord();
         }
@@ -121,6 +128,13 @@ class Sections extends Component
                 ])->execute();
             }
 
+            // Update the UID on the Experiment to clear the cookies
+            $experimentRecord = ExperimentRecord::findOne($record->experimentId);
+            if ($experimentRecord) {
+                $experimentRecord->uid = StringHelper::UUID();
+                $experimentRecord->save(false);
+            }
+
             $transaction->commit();
         } catch (\Exception $e) {
             $transaction->rollBack();
@@ -147,6 +161,13 @@ class Sections extends Component
 
         $transaction = Craft::$app->getDb()->beginTransaction();
         try {
+            // Update the UID on the Experiment to clear the cookies first
+            $experimentRecord = ExperimentRecord::findOne($section->experimentId);
+            if ($experimentRecord) {
+                $experimentRecord->uid = StringHelper::UUID();
+                $experimentRecord->save(false);
+            }
+
             // Delete the section
             Craft::$app->getDb()->createCommand()
                 ->delete(Table::SECTIONS, ['id' => $section->id])
@@ -184,6 +205,13 @@ class Sections extends Component
 
         $transaction = Craft::$app->getDb()->beginTransaction();
         try {
+            // Update the UID on the Experiment to clear the cookies first
+            $experimentRecord = ExperimentRecord::findOne($section->experimentId);
+            if ($experimentRecord) {
+                $experimentRecord->uid = StringHelper::UUID();
+                $experimentRecord->save(false);
+            }
+
             // Delete the section
             Craft::$app->getDb()->createCommand()
                 ->delete(Table::SECTION_DRAFTS, [

@@ -17,6 +17,7 @@ use yii\db\ActiveQueryInterface;
 /**
  * @property int $id ID
  * @property string $name Name
+ * @property string $optimizeId Google Optimize Experiment ID
  * @property string $startDate Start date
  * @property string $endDate End date
  * @property ActiveQueryInterface $sections
@@ -33,7 +34,7 @@ class Experiment extends ActiveRecord
     /**
      * @return string the table name
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return Table::EXPERIMENTS;
     }

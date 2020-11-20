@@ -11,17 +11,20 @@
 namespace angellco\abtest\services;
 
 use angellco\abtest\AbTest;
+use angellco\abtest\records\SectionDraft;
 use Craft;
-use craft\db\Table;
+use craft\base\ElementInterface;
 use craft\elements\Entry;
-use craft\helpers\Db;
 use craft\helpers\Json;
-use craft\services\Security;
 use yii\base\Component;
+use yii\base\InvalidConfigException;
 use yii\web\Cookie;
 
 /**
  * Test service - everything to do with actively running a test.
+ *
+ * @property-read bool|string $activeCookiesAsHash
+ * @property-read bool|array $activeCookies
  *
  * @author    Angell & Co
  * @package   AbTest
@@ -43,7 +46,7 @@ class Test extends Component
     /**
      * Cookies the user for each active experiment.
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function cookie()
     {
@@ -67,28 +70,30 @@ class Test extends Component
 
                     $total = count($section['drafts']) + 1;
 
-                    $r = rand(1, $total);
+                    $r = mt_rand(1, $total);
 
                     if ($r === 1) {
                         $values[$section['id']] = [
                             'control' => true,
                             'draftId' => null,
-                            'index' => 0
+                            'index' => 0,
+                            'optimizeId' => $activeExperiment['optimizeId']
                         ];
                     } else {
                         $draftIndex = $r-2;
-                        $optimizeIndex =
                         $values[$section['id']] = [
                             'control' => false,
                             'draftId' => $section['drafts'][$draftIndex]['id'],
-                            'index' => $draftIndex+1
+                            'index' => $draftIndex+1,
+                            'optimizeId' => $activeExperiment['optimizeId']
                         ];
                     }
                 }
 
                 // Create the cookie and add it
+                /** @var Cookie $cookie */
                 $cookie = Craft::createObject(array_merge(Craft::cookieConfig(), [
-                    'class' => 'yii\web\Cookie',
+                    'class' => Cookie::class,
                     'name' => $activeExperiment['cookieName'],
                     'value' => Json::encode($values),
                 ]));
@@ -99,10 +104,10 @@ class Test extends Component
     }
 
     /**
-     * Returns the altenative entry for this test based on the user’s cookie.
+     * Returns the alternative entry for this test based on the user’s cookie.
      *
      * @param Entry $entry
-     * @return bool|\craft\base\ElementInterface|null
+     * @return bool|ElementInterface|null
      */
     public function getAlternateEntry(Entry $entry)
     {
@@ -154,8 +159,6 @@ class Test extends Component
     /**
      * Returns all the cookies that are currently actively in use.
      *
-     * TODO: for blitz
-     *
      * @return array|bool
      */
     public function getActiveCookies()
@@ -174,8 +177,6 @@ class Test extends Component
 
     /**
      * Returns all the active cookies as a hash of their name / value combinations.
-     *
-     * TODO: for blitz
      *
      * @return bool|string
      */
@@ -200,18 +201,17 @@ class Test extends Component
     /**
      * Returns true if the Entry is a Draft and in an experiment.
      *
-     * TODO: for blitz
-     *
      * @param Entry $entry
      * @return bool
      */
-    public function isDraftInExperiment(Entry $entry)
+    public function isDraftInExperiment(Entry $entry): bool
     {
         if(!$entry->getIsDraft()) {
             return false;
         }
 
-        if (!ExperimentDraft::findOne(['draftId' => $entry->draftId])) {
+        // If we have a SectionDraft then it must be part of an experiment
+        if (!SectionDraft::findOne(['draftId' => $entry->draftId])) {
             return false;
         }
 

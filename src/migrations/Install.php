@@ -31,7 +31,7 @@ class Install extends Migration
     /**
      * @return bool
      */
-    public function safeUp()
+    public function safeUp(): bool
     {
         if ($this->createTables()) {
             $this->createIndexes();
@@ -44,7 +44,7 @@ class Install extends Migration
     /**
      * @return bool
      */
-    public function safeDown()
+    public function safeDown(): bool
     {
         $this->dropForeignKeys();
         $this->dropTables();
@@ -61,7 +61,7 @@ class Install extends Migration
      *
      * @return bool
      */
-    protected function createTables()
+    protected function createTables(): bool
     {
         $tablesCreated = false;
 
@@ -74,7 +74,7 @@ class Install extends Migration
                 [
                     'id' => $this->primaryKey(),
                     'name' => $this->string()->notNull(),
-                    'startDate' => $this->dateTime(),
+                    'optimizeId' => $this->string(),
                     'startDate' => $this->dateTime(),
                     'endDate' => $this->dateTime(),
                     'dateCreated' => $this->dateTime()->notNull(),

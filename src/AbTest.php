@@ -273,10 +273,11 @@ class AbTest extends Plugin
      */
     protected function installBlitzEventListeners()
     {
+        $test = AbTest::$plugin->getTest();
+
         // Modify the URI for Blitz so it caches alternative versions
         Event::on(CacheRequestService::class, CacheRequestService::EVENT_BEFORE_GET_RESPONSE,
-            function(ResponseEvent $event) {
-                $test = AbTest::$plugin->getTest();
+            static function(ResponseEvent $event) use($test) {
                 $test->cookie();
                 $cookieHash = $test->getActiveCookiesAsHash();
                 if ($cookieHash) {
@@ -294,17 +295,15 @@ class AbTest extends Plugin
         // TODO: for blitz when saving an experiment/draft relationship make sure to add element IDs and refresh
 
         // Make drafts purge the Blitz cache if needed
-//        Event::on(Elements::class, Elements::EVENT_AFTER_SAVE_ELEMENT,
-//            /** @var ElementEvent $event */
-//            function($event) use ($test) {
-//                if ($event->element !== null && is_a($event->element, Entry::class)) {
-//                    // Check if its part of an experiment
-//                    if ($test->isDraftInExperiment($event->element)) {
-//                        Blitz::$plugin->refreshCache->addElementIds(Entry::class, [$event->element->id]);
-//                        Blitz::$plugin->refreshCache->refresh();
-//                    }
-//                }
-//            }
-//        );
+        Event::on(Elements::class, Elements::EVENT_AFTER_SAVE_ELEMENT,
+            /** @var ElementEvent $event */
+            static function($event) use ($test) {
+                // Check if its an Entry and part of an Experiment
+                if ($event->element !== null && is_a($event->element, Entry::class) && $test->isDraftInExperiment($event->element)) {
+                    Blitz::$plugin->refreshCache->addElementIds(Entry::class, [$event->element->id]);
+                    Blitz::$plugin->refreshCache->refresh();
+                }
+            }
+        );
     }
 }

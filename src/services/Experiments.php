@@ -15,11 +15,17 @@ use angellco\abtest\models\Experiment;
 use angellco\abtest\records\Experiment as ExperimentRecord;
 use Craft;
 use craft\base\MemoizableArray;
+use craft\helpers\ArrayHelper;
 use craft\helpers\DateTimeHelper;
+use craft\helpers\StringHelper;
 use yii\base\Component;
 
 /**
  * Experiments service.
+ *
+ * @property-read array $activeExperiments
+ * @property-read array $allExperimentIds
+ * @property-read Experiment[] $allExperiments
  *
  * @author    Angell & Co
  * @package   AbTest
@@ -84,7 +90,6 @@ class Experiments extends Component
         // TODO: memoize this?
         $active = [];
 
-        /** @var Experiment $experiment */
         foreach ($this->getAllExperiments() as $experiment) {
 
             // No dates
@@ -133,6 +138,7 @@ class Experiments extends Component
      * @param Experiment $model
      * @param bool|bool $runValidation
      * @return bool
+     * @throws \Exception
      */
     public function saveExperiment(Experiment $model, bool $runValidation = true): bool
     {
@@ -140,8 +146,11 @@ class Experiments extends Component
             $record = ExperimentRecord::findOne($model->id);
 
             if (!$record) {
-                throw new Exception(Craft::t('ab-test', 'No experiment exists with the ID “{id}”', ['id' => $model->id]));
+                throw new \RuntimeException(Craft::t('ab-test', 'No experiment exists with the ID “{id}”', ['id' => $model->id]));
             }
+
+            // If its an existing experiment then get a new UID so the cookies purge
+            $record->uid = StringHelper::UUID();
         } else {
             $record = new ExperimentRecord();
         }
@@ -153,6 +162,7 @@ class Experiments extends Component
         }
 
         $record->name = $model->name;
+        $record->optimizeId = $model->optimizeId;
         $record->startDate = $model->startDate;
         $record->endDate = $model->endDate;
 
@@ -224,6 +234,7 @@ class Experiments extends Component
                 $experiments[] = new Experiment($record->toArray([
                     'id',
                     'name',
+                    'optimizeId',
                     'startDate',
                     'endDate',
                     'uid'

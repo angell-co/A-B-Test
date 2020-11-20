@@ -11,8 +11,11 @@
 namespace angellco\abtest\variables;
 
 use angellco\abtest\AbTest;
+use Craft;
 use craft\helpers\ArrayHelper;
+use craft\helpers\Json;
 use craft\helpers\Template;
+use Twig\Markup;
 
 class AbTestVariable
 {
@@ -23,22 +26,32 @@ class AbTestVariable
     /**
      * Returns script to get the output of a URI.
      *
-     * @param string $uri
-     * @param array $params
-     *
      * @return Markup
      */
-    public function getOptimizeJs()
+    public function getOptimizeJs(): Markup
     {
         $test = AbTest::$plugin->getTest();
 
-        $str = $test->getActiveCookies()[0]->value;
+        $activeCookies = $test->getActiveCookies();
+        $optimizeExperiments = [];
+        foreach ($activeCookies as $activeCookie) {
+            $sections = Json::decode($activeCookie->value);
+            foreach ($sections as $section) {
+                if ($section['optimizeId']) {
+                    $optimizeExperiments[$section['optimizeId']][] = $section['index'];
+                }
+            }
+        }
 
-        $cookieParts = explode(':', $str);
+        $output = '';
+        foreach ($optimizeExperiments as $id => $variants) {
 
-        $id = end($cookieParts);
+            // There may be more than one variant index, so concat them with "-" for MVT tests
+            $variantsStr = implode('-', array_values($variants));
+            $output .= "ga('set', 'exp', '$id.$variantsStr');\n";
+        }
 
-        return Template::raw("ga('set', 'exp', 'mhhcA-P-TZOv4MPNbgi9Bw.$id');");
+        return Template::raw($output);
     }
 
 }
