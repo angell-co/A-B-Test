@@ -36,7 +36,7 @@ class AbTestVariable
      *
      * ```twig
      * {% do seomatic.script.get('googleTagManager').dataLayer({
-     *    'exp': '{{ craft.abtest.getOptimizeJs() }}'
+     *    'exp': craft.abtest.getOptimizeJs()
      * }) %}
      * ```
      *
@@ -47,6 +47,11 @@ class AbTestVariable
         $test = AbTest::$plugin->getTest();
 
         $activeCookies = $test->getActiveCookies();
+
+        if (!$activeCookies) {
+            return false;
+        }
+
         $optimizeExperiments = [];
         foreach ($activeCookies as $activeCookie) {
             $sections = Json::decode($activeCookie->value);
