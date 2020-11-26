@@ -12,34 +12,24 @@ namespace angellco\abtest;
 
 use angellco\abtest\base\PluginTrait;
 use angellco\abtest\models\Section;
-use angellco\abtest\records\SectionDraft;
 use angellco\abtest\services\Experiments;
 use angellco\abtest\services\Test;
 use angellco\abtest\variables\AbTestVariable;
 use Craft;
 use craft\base\Plugin;
-use craft\db\Query;
-use craft\db\Table;
 use craft\elements\db\ElementQuery;
 use craft\elements\Entry;
 use craft\events\ElementEvent;
 use craft\events\PopulateElementEvent;
 use craft\events\RegisterUrlRulesEvent;
-use craft\events\TemplateEvent;
-use craft\helpers\ConfigHelper;
 use craft\services\Elements;
 use craft\web\Application;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
-use craft\web\View;
 use putyourlightson\blitz\Blitz;
 use putyourlightson\blitz\events\ResponseEvent;
-use putyourlightson\blitz\events\SaveCacheEvent;
 use putyourlightson\blitz\services\CacheRequestService;
-use putyourlightson\blitz\services\GenerateCacheService;
 use yii\base\Event;
-use yii\db\Exception as DbException;
-use yii\web\Cookie;
 
 /**
  * Class AbTest
