@@ -108,7 +108,7 @@ class AbTest extends Plugin
             $this->installCpEventListeners();
         }
 
-        if ($response->getIsOk() && $request->getIsSiteRequest() && !$request->getIsConsoleRequest()) {
+        if (!$request->getIsConsoleRequest() && $request->getIsSiteRequest() && $response->getIsOk()) {
             $this->installSiteEventListeners();
         }
 
