@@ -24,11 +24,25 @@ class AbTestVariable
     // =========================================================================
 
     /**
-     * Returns script to get the output of a URI.
+     * Returns the string needed by Google Optimize.
      *
-     * @return Markup
+     * This can then be used in your Google Analytics scripts like so:
+     *
+     * ```js
+     * ga('set', 'exp', '{{ craft.abtest.getOptimizeJs() }}')
+     * ```
+     *
+     * Or, you can set it in the data layer via SEOmatic:
+     *
+     * ```twig
+     * {% do seomatic.script.get('googleTagManager').dataLayer({
+     *    'exp': '{{ craft.abtest.getOptimizeJs() }}'
+     * }) %}
+     * ```
+     *
+     * @return bool|string
      */
-    public function getOptimizeJs(): Markup
+    public function getOptimizeJs()
     {
         $test = AbTest::$plugin->getTest();
 
@@ -43,15 +57,21 @@ class AbTestVariable
             }
         }
 
-        $output = '';
+        if (empty($optimizeExperiments)) {
+            return false;
+        }
+
+        $experimentStrings = [];
         foreach ($optimizeExperiments as $id => $variants) {
 
             // There may be more than one variant index, so concat them with "-" for MVT tests
             $variantsStr = implode('-', array_values($variants));
-            $output .= "ga('set', 'exp', '$id.$variantsStr');\n";
+            $experimentStrings[] = $id.'.'.$variantsStr;
         }
 
-        return Template::raw($output);
+        // For multiple experiments at the same time, we concatenate with a !
+        // @see https://stackoverflow.com/a/62024740/956784
+        return implode('!', array_values($experimentStrings));
     }
 
 }
