@@ -36,7 +36,7 @@ class AbTestVariable
      *
      * ```twig
      * {% do seomatic.script.get('googleTagManager').dataLayer({
-     *    'exp': '{{ craft.abtest.getOptimizeJs() }}'
+     *    'exp': craft.abtest.getOptimizeJs()
      * }) %}
      * ```
      *
