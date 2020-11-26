@@ -2,7 +2,7 @@
 /**
  * A/B Test  plugin for Craft CMS 3.x
  *
- * Run up A/B (split) or multivariate tests easily in Craft.
+ * Run A/B tests easily in Craft.
  *
  * @link      https://angell.io
  * @copyright Copyright (c) 2020 Angell & Co
@@ -11,7 +11,7 @@
 namespace angellco\abtest\db;
 
 /**
- * This class provides constants for defining A/B Test’s database table names.
+ * Class Table
  *
  * @author    Angell & Co
  * @package   AbTest
@@ -19,6 +19,7 @@ namespace angellco\abtest\db;
  */
 abstract class Table
 {
-    const CONTENT = '{{%abtest_content}}';
-    const RELATIONS = '{{%abtest_relations}}';
+    const EXPERIMENTS = '{{%abtest_experiments}}';
+    const SECTIONS = '{{%abtest_sections}}';
+    const SECTION_DRAFTS = '{{%abtest_section_drafts}}';
 }

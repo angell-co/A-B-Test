@@ -2,7 +2,7 @@
 /**
  * A/B Test  plugin for Craft CMS 3.x
  *
- * Run up A/B (split) or multivariate tests easily in Craft.
+ * Run A/B tests easily in Craft.
  *
  * @link      https://angell.io
  * @copyright Copyright (c) 2020 Angell & Co
@@ -10,80 +10,73 @@
 
 namespace angellco\abtest\migrations;
 
-use angellco\abtest\AbTest;
 use angellco\abtest\db\Table;
 use Craft;
-use craft\config\DbConfig;
 use craft\db\Migration;
-use craft\db\Table as CraftTable;
+use craft\helpers\MigrationHelper;
 
 /**
+ * Class Install
+ *
  * @author    Angell & Co
  * @package   AbTest
  * @since     1.0.0
  */
 class Install extends Migration
 {
-    // Public Properties
-    // =========================================================================
-
-    /**
-     * @var string The database driver to use
-     */
-    public $driver;
 
     // Public Methods
     // =========================================================================
 
     /**
-     * @inheritdoc
+     * @return bool
      */
-    public function safeUp()
+    public function safeUp(): bool
     {
-        $this->driver = Craft::$app->getConfig()->getDb()->driver;
         if ($this->createTables()) {
             $this->createIndexes();
             $this->addForeignKeys();
-            // Refresh the db schema caches
-            Craft::$app->db->schema->refresh();
-            $this->insertDefaultData();
         }
 
         return true;
     }
 
     /**
-     * @inheritdoc
+     * @return bool
      */
-    public function safeDown()
+    public function safeDown(): bool
     {
-        $this->driver = Craft::$app->getConfig()->getDb()->driver;
-        $this->removeTables();
+        $this->dropForeignKeys();
+        $this->dropTables();
 
         return true;
     }
+
 
     // Protected Methods
     // =========================================================================
 
     /**
+     * Creates the tables needed for the Records used by the plugin
+     *
      * @return bool
      */
-    protected function createTables()
+    protected function createTables(): bool
     {
         $tablesCreated = false;
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema(Table::CONTENT);
+        // Experiments table
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Table::EXPERIMENTS);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                Table::CONTENT,
+                Table::EXPERIMENTS,
                 [
                     'id' => $this->primaryKey(),
-                    'contentId' => $this->integer()->notNull(),
-                    'variantId' => $this->integer()->notNull(),
-                    'weight' => $this->decimal()->unsigned(),
-                    'title' => $this->string(),
+                    'name' => $this->string()->notNull(),
+                    'optimizeId' => $this->string(),
+                    'startDate' => $this->dateTime(),
+                    'endDate' => $this->dateTime(),
                     'dateCreated' => $this->dateTime()->notNull(),
                     'dateUpdated' => $this->dateTime()->notNull(),
                     'uid' => $this->uid(),
@@ -91,18 +84,33 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema(Table::RELATIONS);
+        // Sections table
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Table::SECTIONS);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                Table::RELATIONS,
+                Table::SECTIONS,
                 [
                     'id' => $this->primaryKey(),
-                    'relationId' => $this->integer()->notNull(),
-                    'targetId' => $this->integer()->notNull(),
-                    'sortOrder' => $this->smallInteger()->unsigned(),
-                    'variantId' => $this->integer()->notNull(),
-                    'weight' => $this->decimal()->unsigned(),
+                    'experimentId' => $this->integer()->notNull(),
+                    'sourceId' => $this->integer()->notNull(),
+                    'dateCreated' => $this->dateTime()->notNull(),
+                    'dateUpdated' => $this->dateTime()->notNull(),
+                    'uid' => $this->uid(),
+                ]
+            );
+        }
+
+        // Section_Drafts table
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Table::SECTION_DRAFTS);
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                Table::SECTION_DRAFTS,
+                [
+                    'id' => $this->primaryKey(),
+                    'sectionId' => $this->integer()->notNull(),
+                    'draftId' => $this->integer()->notNull(),
                     'dateCreated' => $this->dateTime()->notNull(),
                     'dateUpdated' => $this->dateTime()->notNull(),
                     'uid' => $this->uid(),
@@ -114,43 +122,54 @@ class Install extends Migration
     }
 
     /**
+     * Creates the indexes needed for the Records used by the plugin
+     *
      * @return void
      */
     protected function createIndexes()
     {
-        $this->createIndex(null, Table::CONTENT, ['contentId', 'variantId'], true);
-        $this->createIndex(null, Table::CONTENT, ['contentId'], false);
-        $this->createIndex(null, Table::CONTENT, ['title'], false);
-
-        $this->createIndex(null, Table::RELATIONS, ['relationId', 'targetId', 'variantId'], true);
-        $this->createIndex(null, Table::RELATIONS, ['relationId'], false);
-        $this->createIndex(null, Table::RELATIONS, ['targetId'], false);
+        $this->createIndex(null, Table::SECTIONS, ['experimentId', 'sourceId'], true);
+        $this->createIndex(null, Table::SECTION_DRAFTS, ['sectionId', 'draftId'], true);
     }
 
     /**
+     * Creates the foreign keys needed for the Records used by the plugin
+     *
      * @return void
      */
     protected function addForeignKeys()
     {
-        $this->addForeignKey(null, Table::CONTENT, ['contentId'], CraftTable::CONTENT, ['id'], 'CASCADE', null);
-
-        $this->addForeignKey(null, Table::RELATIONS, ['relationId'], CraftTable::RELATIONS, ['id'], 'CASCADE', null);
-        $this->addForeignKey(null, Table::RELATIONS, ['targetId'], CraftTable::ELEMENTS, ['id'], 'CASCADE', null);
+        $this->addForeignKey(null, Table::SECTIONS, ['experimentId'], Table::EXPERIMENTS, ['id'], 'CASCADE', 'CASCADE');
+        $this->addForeignKey(null, Table::SECTIONS, ['sourceId'], \craft\db\Table::ELEMENTS, ['id'], 'CASCADE', 'CASCADE');
+        $this->addForeignKey(null, Table::SECTION_DRAFTS, ['sectionId'], Table::SECTIONS, ['id'], 'CASCADE', 'CASCADE');
+        $this->addForeignKey(null, Table::SECTION_DRAFTS, ['draftId'], \craft\db\Table::DRAFTS, ['id'], 'CASCADE', 'CASCADE');
     }
 
     /**
+     * Removes the foreign keys
+     *
      * @return void
      */
-    protected function insertDefaultData()
+    protected function dropForeignKeys()
     {
+        if (Craft::$app->db->schema->getTableSchema(Table::SECTIONS)) {
+            MigrationHelper::dropAllForeignKeysToTable(Table::SECTIONS, $this);
+        }
+        if (Craft::$app->db->schema->getTableSchema(Table::SECTION_DRAFTS)) {
+            MigrationHelper::dropAllForeignKeysToTable(Table::SECTION_DRAFTS, $this);
+        }
     }
 
     /**
+     * Removes the tables needed for the Records used by the plugin
+     *
      * @return void
      */
-    protected function removeTables()
+    protected function dropTables()
     {
-        $this->dropTableIfExists(Table::CONTENT);
-        $this->dropTableIfExists(Table::RELATIONS);
+        $this->dropTableIfExists(Table::SECTION_DRAFTS);
+        $this->dropTableIfExists(Table::SECTIONS);
+        $this->dropTableIfExists(Table::EXPERIMENTS);
     }
+
 }

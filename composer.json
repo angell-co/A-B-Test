@@ -1,6 +1,6 @@
 {
     "name": "angellco/ab-test",
-    "description": "Run up A/B (split) or multivariate tests easily in Craft.",
+    "description": "Run A/B tests easily in Craft.",
     "type": "craft-plugin",
     "keywords": [
         "craft",
@@ -23,7 +23,7 @@
         }
     ],
     "require": {
-        "craftcms/cms": "^3.4.0"
+        "craftcms/cms": "^3.5.11"
     },
     "autoload": {
         "psr-4": {
