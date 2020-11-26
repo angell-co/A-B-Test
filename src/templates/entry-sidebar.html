@@ -3,7 +3,7 @@
 <div id="abtest-entry-sidebar"></div>
 
 {% js %}
-    new Craft.AbTest.EntrySidebar({
+    new window.AbTest_EntrySidebar({
         experimentOptions: {{ experimentOptions|json_encode|raw }},
         drafts: {{ drafts|json_encode|raw }},
         section: {{ section|json_encode|raw }}
