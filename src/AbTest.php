@@ -15,6 +15,7 @@ use angellco\abtest\models\Section;
 use angellco\abtest\services\Experiments;
 use angellco\abtest\services\Test;
 use angellco\abtest\variables\AbTestVariable;
+use angellco\abtest\web\assets\abtestui\AbTestUiAsset;
 use Craft;
 use craft\base\Plugin;
 use craft\elements\db\ElementQuery;
@@ -36,6 +37,7 @@ use yii\base\Event;
  *
  * @property Experiments $experiments The Experiments component.
  * @method Experiments getExperiments() Returns the Experiments component.
+ * @property-read mixed $cpNavItem
  * @property Test $test The Test component.
  * @method Test getTest() Returns the Test component.
  *
@@ -49,15 +51,6 @@ class AbTest extends Plugin
     // =========================================================================
 
     use PluginTrait;
-
-    // Static Properties
-    // =========================================================================
-
-    /**
-     * @var AbTest
-     */
-    public static $plugin;
-    public static $cookie;
 
     // Public Properties
     // =========================================================================
@@ -169,7 +162,6 @@ class AbTest extends Plugin
 
                 $experimentOptions = [];
                 $draftData = [];
-                $expDrafts = [];
                 $experiments = $this->getExperiments()->getAllExperiments();
                 $section = null;
 
