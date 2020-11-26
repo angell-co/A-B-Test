@@ -15,7 +15,6 @@ use angellco\abtest\models\Section;
 use angellco\abtest\services\Experiments;
 use angellco\abtest\services\Test;
 use angellco\abtest\variables\AbTestVariable;
-use angellco\abtest\web\assets\abtestui\AbTestUiAsset;
 use Craft;
 use craft\base\Plugin;
 use craft\elements\db\ElementQuery;
