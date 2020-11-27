@@ -11,7 +11,7 @@
 namespace angellco\abtest\web\assets\abtestui;
 
 use craft\web\AssetBundle;
-use craft\web\assets\cp\CpAsset;
+use craft\web\assets\garnish\GarnishAsset;
 use craft\web\assets\vue\VueAsset;
 
 /**
@@ -41,7 +41,7 @@ class AbTestUiAsset extends AssetBundle
         $this->sourcePath = __DIR__ . '/dist/';
 
         $this->depends = [
-            CpAsset::class,
+            GarnishAsset::class,
             VueAsset::class,
         ];
 
