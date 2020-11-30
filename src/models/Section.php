@@ -102,10 +102,16 @@ class Section extends Model
             return [];
         }
 
+        // TODO: why do we need this? It seems like some fields don’t load properly on a draft otherwise ...
+        $fieldHandles = array_map(static function($field) {
+            return $field->handle;
+        }, Craft::$app->getFields()->getFieldsWithContent());
+
         foreach ($draftIds as $draftId) {
             $this->drafts[] = Entry::find()
                 ->draftId($draftId)
                 ->anyStatus()
+                ->with($fieldHandles)
                 ->one();
         }
 
